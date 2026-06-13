@@ -4,7 +4,7 @@ Go port of the [@jsonic/path](https://github.com/jsonicjs/path) Jsonic syntax pl
 
 Module path: `github.com/jsonicjs/path/go`
 
-This documentation is organised in four parts, following the [Diátaxis](https://diataxis.fr/) framework:
+This documentation is organised in four parts:
 
 - [Tutorial](#tutorial) — a hands-on walk-through for a first-time user.
 - [How-to guides](#how-to-guides) — recipes for specific tasks.
@@ -60,7 +60,7 @@ result, _ := j.Parse("{a:{b:1,c:[2,3]}}")
 j := jsonic.Make()
 j.Use(path.Path, nil)
 
-j.Rule("val", func(rs *jsonic.RuleSpec) {
+j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
     rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
         p, _ := r.K["path"].([]any)
         switch node := r.Node.(type) {
@@ -87,7 +87,7 @@ You have now seen the plugin populate the path at every level: the root is `[]an
 `Path` runs its hooks first (`bo`/`ao`). Later actions can read `r.K["path"]` inside `BC`/`AC` actions:
 
 ```go
-j.Rule("val", func(rs *jsonic.RuleSpec) {
+j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
     rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
         p, _ := r.K["path"].([]any)
         fmt.Printf("path = %v, value = %v\n", p, r.Node)

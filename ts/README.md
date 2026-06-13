@@ -15,7 +15,7 @@ This plugin adds property-path tracking to the [Jsonic](https://jsonic.senecajs.
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
 
 
-This documentation is organised in four parts, following the [Diátaxis](https://diataxis.fr/) framework:
+This documentation is organised in four parts:
 
 - [Tutorial](#tutorial) — a hands-on walk-through for a first-time user.
 - [How-to guides](#how-to-guides) — recipes for specific tasks.
