@@ -28,3 +28,6 @@ package-lock.json
 yarn.lock
 
 *.tsbuildinfo
+
+# Scratch folder for HTTP-downloaded dependencies and local builds.
+work
