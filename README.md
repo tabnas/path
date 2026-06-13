@@ -1,6 +1,6 @@
 # @jsonic/path
 
-This plugin allows the [Jsonic](https://jsonic.senecajs.org) JSON parser to determine the path to values.
+This plugin allows the [Tabnas](https://github.com/tabnas/parser) parser to determine the path to values.
 
 This repository contains:
 

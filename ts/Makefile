@@ -1,4 +1,4 @@
-.PHONY: all build test clean embed build-ts build-go test-ts test-go clean-ts clean-go publish-go tags-go tidy-go reset
+.PHONY: all build test clean build-ts build-go test-ts test-go clean-ts clean-go publish-go tags-go tidy-go reset
 
 all: build test
 
@@ -7,10 +7,6 @@ build: build-ts build-go
 test: test-ts test-go
 
 clean: clean-ts clean-go
-
-# Embed path-grammar.jsonic into src/path.ts and ../go/path.go.
-embed:
-	node embed-grammar.js
 
 # TypeScript
 build-ts:
@@ -23,7 +19,7 @@ clean-ts:
 	rm -rf dist dist-test
 
 # Go
-build-go: embed
+build-go:
 	cd ../go && go build ./...
 
 test-go:

@@ -1,4 +1,4 @@
-import { Plugin } from 'jsonic';
+import { Plugin } from 'tabnas';
 type PathOptions = {};
 declare const Path: Plugin;
 export { Path };

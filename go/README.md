@@ -1,6 +1,6 @@
 # jsonic/path (Go port)
 
-Go port of the [@jsonic/path](https://github.com/jsonicjs/path) Jsonic syntax plugin. It adds property-path tracking to the [Jsonic](https://github.com/jsonicjs/jsonic) parser so that rule actions can see the path (keys and indices) leading to the current value.
+Go port of the [@jsonic/path](https://github.com/jsonicjs/path) Tabnas parser plugin. It adds property-path tracking to the [Tabnas](https://github.com/tabnas/parser) parser so that rule actions can see the path (keys and indices) leading to the current value.
 
 Module path: `github.com/jsonicjs/path/go`
 
@@ -14,7 +14,9 @@ This documentation is organised in four parts:
 
 ## Tutorial
 
-This tutorial shows you how to install the package, attach it to a Jsonic instance, and read the path of a value as it is parsed.
+This tutorial shows you how to attach the package to a Tabnas parser and read the path of a value as it is parsed.
+
+The Tabnas engine ships no grammar of its own — you bring a grammar that defines the `val` / `map` / `pair` / `list` / `elem` rules. `Path` attaches to those rules. Install your grammar first, then `Path` on top.
 
 **1. Install**
 
@@ -22,25 +24,22 @@ This tutorial shows you how to install the package, attach it to a Jsonic instan
 go get github.com/jsonicjs/path/go
 ```
 
-**2. Attach the plugin**
+**2. Attach a grammar and the plugin**
 
 ```go
 import (
-    jsonic "github.com/jsonicjs/jsonic/go"
+    tabnas "github.com/tabnas/parser/go"
     path "github.com/jsonicjs/path/go"
 )
 
-j := jsonic.Make()
-_ = j.Use(path.Path, nil)
+j := tabnas.Make()
+installGrammar(j)          // your grammar: defines val/map/pair/list/elem
+_ = j.Use(path.Path, nil)  // install Path after the grammar
 ```
 
-Or use the convenience constructor:
+A complete, minimal grammar fixture lives in `path_test.go` (`installGrammar`).
 
-```go
-j := path.MakeJsonic()
-```
-
-Parsing works exactly as before:
+Parsing works exactly as it would without the plugin:
 
 ```go
 result, _ := j.Parse("{a:{b:1,c:[2,3]}}")
@@ -57,11 +56,8 @@ result, _ := j.Parse("{a:{b:1,c:[2,3]}}")
 `Path` itself only populates `Rule.K["path"]`. To *see* it, register a second rule action that reads the path:
 
 ```go
-j := jsonic.Make()
-j.Use(path.Path, nil)
-
-j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
-    rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
+j.Rule("val", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+    rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
         p, _ := r.K["path"].([]any)
         switch node := r.Node.(type) {
         case map[string]any:
@@ -87,8 +83,8 @@ You have now seen the plugin populate the path at every level: the root is `[]an
 `Path` runs its hooks first (`bo`/`ao`). Later actions can read `r.K["path"]` inside `BC`/`AC` actions:
 
 ```go
-j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
-    rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
+j.Rule("val", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+    rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
         p, _ := r.K["path"].([]any)
         fmt.Printf("path = %v, value = %v\n", p, r.Node)
     })
@@ -97,7 +93,7 @@ j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
 
 ### How to seed the path from the caller
 
-Pass a base path via Jsonic meta and `Path` will use it for the root:
+Pass a base path via Tabnas meta and `Path` will use it for the root:
 
 ```go
 result, _ := j.ParseMeta("{a:1}", map[string]any{
@@ -115,22 +111,10 @@ The `base` slice is shallow-copied, so the caller's slice is not mutated.
 Every alt added by `Path` is tagged with group `"path"`. Excluding that group disables path tracking while leaving the plugin installed:
 
 ```go
-j.Options(map[string]any{
-    "rule": map[string]any{
-        "exclude": "path",
-    },
+j.SetOptions(tabnas.Options{
+    Rule: &tabnas.RuleOptions{Exclude: "path"},
 })
 ```
-
-### How to rebuild the embedded grammar
-
-`path-grammar.jsonic` (in the repository root) is the single source of truth for the declarative grammar. After editing it, regenerate the embedded copies:
-
-```sh
-npm run embed
-```
-
-The script rewrites the marked region in `go/path.go` (and `src/path.ts`).
 
 
 ## Reference
@@ -141,9 +125,18 @@ import path "github.com/jsonicjs/path/go"
 
 ### Exported identifiers
 
-- `path.Path(j *jsonic.Jsonic, opts map[string]any) error` — plugin function. Register with `j.Use(path.Path, nil)`.
-- `path.MakeJsonic() *jsonic.Jsonic` — returns a Jsonic instance with `Path` already installed.
+- `path.Path(j *tabnas.Tabnas, opts map[string]any) error` — plugin function. Register with `j.Use(path.Path, nil)` *after* the grammar that defines the hooked rules.
 - `path.PathOptions` — empty struct reserved for future options.
+
+### Hooked rules
+
+`Path` attaches to the host grammar's rules by name:
+
+```
+val  map  pair  list  elem
+```
+
+Each is declared with an empty rule spec so `j.Grammar()` auto-wires the matching `@<rulename>-<phase>` refs as state actions, without otherwise altering the host grammar's rules.
 
 ### Values written to `Rule.K`
 
@@ -160,8 +153,6 @@ At the top level (`r.D == 0`) `path` is `[]any{}` unless a base was supplied via
 Path segments are stored as `any`:
 - Map keys are `string`.
 - Array indices are `int`.
-
-Use a type switch or the unexported helper pattern to read them:
 
 ```go
 p, _ := r.K["path"].([]any)
@@ -185,24 +176,6 @@ j.ParseMeta(src, map[string]any{
 
 - `meta["path"]["base"]` (`[]any`) — seed the root path. The slice is shallow-copied.
 
-### Grammar file
-
-`path-grammar.jsonic` declares the rules the plugin hooks into:
-
-```
-{
-  rule: {
-    val:  {}
-    map:  {}
-    pair: {}
-    list: {}
-    elem: {}
-  }
-}
-```
-
-Each empty rule entry causes `j.Grammar()` to auto-wire any matching `@<rulename>-<phase>` function refs as state actions.
-
 ### Function refs
 
 The plugin registers these refs against the grammar:
@@ -222,7 +195,9 @@ The plugin registers these refs against the grammar:
 
 ## Explanation
 
-**Why a plugin.** Jsonic does not record the path to a value because that information is unused by the default rules. Many extensions (validation, error reporting, templating) *do* need it. A plugin is the right scope: it costs nothing when not loaded, and it stays out of the core parser.
+**Why a plugin.** A grammar does not record the path to a value because that information is unused by the default rules. Many extensions (validation, error reporting, templating) *do* need it. A plugin is the right scope: it costs nothing when not loaded, and it stays out of the core grammar.
+
+**Why the host supplies the grammar.** Tabnas is a bare parsing engine: it ships no grammar. `Path` adds *behaviour* (path tracking) to whatever grammar you install, by hooking the conventional `val` / `map` / `pair` / `list` / `elem` rule names. Install your grammar first so those rules exist when `Path` wires its refs onto them.
 
 **Why `Rule.K`.** Each parser rule has a key bag `K` that is *inherited by child rules*. Writing the path once into `r.K["path"]` makes it visible for the lifetime of that subtree without threading state through every action. Updating the child's `K["path"]` in `pair-ao` / `elem-ao` is enough to walk the path down one level at a time.
 
@@ -231,7 +206,5 @@ The plugin registers these refs against the grammar:
 **Why depth guards.** Top-level implicit maps and lists can produce a rule at depth 0 that is logically the root. The plugin initialises the root path only at `D == 0` and updates children only at `D > 0`, so implicit structure does not create a phantom leading segment.
 
 **Meta base path.** Passing `meta["path"]["base"]` lets a caller parse a fragment as if it were already nested under a known path — useful when composing parsers or when reporting errors in terms of a surrounding document.
-
-**Declarative grammar and the `g: "path"` tag.** The plugin's rule bindings are declared in `path-grammar.jsonic` rather than built imperatively. The `g: "path"` group tag marks every alt this plugin contributes, so a parser built with `options.rule.exclude: "path"` can reliably turn path tracking off without uninstalling the plugin.
 
 **Why `any` for path segments.** A path mixes `string` (map keys) and `int` (array indices). Go has no sum type, so the slice element type is `any` and callers type-switch when they care about the distinction. Numeric indices are stored as `int` (not `float64`) so they survive a round trip through a type switch without further conversion.

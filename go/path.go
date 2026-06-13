@@ -3,37 +3,25 @@
 package path
 
 import (
-	jsonic "github.com/jsonicjs/jsonic/go"
+	tabnas "github.com/tabnas/parser/go"
 )
 
 const Version = "0.1.2"
 
 type PathOptions struct{}
 
-// --- BEGIN EMBEDDED path-grammar.jsonic ---
-const grammarText = `
-# Path Grammar Definition
-# Declares rule names so @<rulename>-<phase> refs auto-wire as state actions.
-# Parsed by a standard Jsonic instance and passed to jsonic.grammar().
+// hookedRules are the host-grammar rules the plugin attaches to. The
+// Tabnas engine ships no grammar of its own, so these names must match
+// the rules supplied by whatever grammar plugin the consumer installs.
+// The standard value/map/pair/list/elem rule set uses these names.
+var hookedRules = []string{"val", "map", "pair", "list", "elem"}
 
-{
-  rule: {
-    val:  {}
-    map:  {}
-    pair: {}
-    list: {}
-    elem: {}
-  }
-}
-`
-// --- END EMBEDDED path-grammar.jsonic ---
-
-// Path is a Jsonic plugin that tracks the property path to the current
+// Path is a Tabnas plugin that tracks the property path to the current
 // location during parsing. The path is stored in Rule.K["path"] as a
 // []any slice of string keys and int indices.
-func Path(j *jsonic.Jsonic, opts map[string]any) error {
-	refs := map[jsonic.FuncRef]any{
-		"@val-bo": jsonic.StateAction(func(r *jsonic.Rule, ctx *jsonic.Context) {
+func Path(j *tabnas.Tabnas, opts map[string]any) error {
+	refs := map[tabnas.FuncRef]any{
+		"@val-bo": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if r.D == 0 {
 				var base []any
 				if ctx.Meta != nil {
@@ -51,11 +39,11 @@ func Path(j *jsonic.Jsonic, opts map[string]any) error {
 			}
 		}),
 
-		"@map-bo": jsonic.StateAction(func(r *jsonic.Rule, ctx *jsonic.Context) {
+		"@map-bo": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			delete(r.K, "index")
 		}),
 
-		"@pair-ao": jsonic.StateAction(func(r *jsonic.Rule, ctx *jsonic.Context) {
+		"@pair-ao": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if r.D > 0 && r.U["pair"] != nil {
 				key := r.U["key"]
 				parentPath := toPathSlice(r.K["path"])
@@ -67,11 +55,11 @@ func Path(j *jsonic.Jsonic, opts map[string]any) error {
 			}
 		}),
 
-		"@list-bo": jsonic.StateAction(func(r *jsonic.Rule, ctx *jsonic.Context) {
+		"@list-bo": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			r.K["index"] = -1
 		}),
 
-		"@elem-ao": jsonic.StateAction(func(r *jsonic.Rule, ctx *jsonic.Context) {
+		"@elem-ao": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if r.D > 0 {
 				idx := 0
 				if v, ok := r.K["index"].(int); ok {
@@ -87,35 +75,24 @@ func Path(j *jsonic.Jsonic, opts map[string]any) error {
 				r.Child.K["index"] = idx
 			}
 		}),
-
 	}
 
-	parsed, err := jsonic.Make().Parse(grammarText)
-	if err != nil {
-		return err
-	}
-	gsMap, _ := parsed.(map[string]any)
-	ruleMap, _ := gsMap["rule"].(map[string]any)
-	gsRule := make(map[string]*jsonic.GrammarRuleSpec, len(ruleMap))
-	for name := range ruleMap {
-		gsRule[name] = &jsonic.GrammarRuleSpec{}
+	// Declare the rules to hook. Each empty rule spec causes Grammar to
+	// auto-wire the matching @<rulename>-<phase> refs above as state
+	// actions, without otherwise altering the host grammar's rules.
+	gsRule := make(map[string]*tabnas.GrammarRuleSpec, len(hookedRules))
+	for _, name := range hookedRules {
+		gsRule[name] = &tabnas.GrammarRuleSpec{}
 	}
 
 	return j.Grammar(
-		&jsonic.GrammarSpec{Ref: refs, Rule: gsRule},
-		&jsonic.GrammarSetting{
-			Rule: &jsonic.GrammarSettingRule{
-				Alt: &jsonic.GrammarSettingAlt{G: "path"},
+		&tabnas.GrammarSpec{Ref: refs, Rule: gsRule},
+		&tabnas.GrammarSetting{
+			Rule: &tabnas.GrammarSettingRule{
+				Alt: &tabnas.GrammarSettingAlt{G: "path"},
 			},
 		},
 	)
-}
-
-// MakeJsonic creates a Jsonic parser instance with the Path plugin.
-func MakeJsonic() *jsonic.Jsonic {
-	j := jsonic.Make()
-	j.Use(Path, nil)
-	return j
 }
 
 func toPathSlice(v any) []any {
