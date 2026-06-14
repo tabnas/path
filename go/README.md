@@ -106,17 +106,6 @@ result, _ := j.ParseMeta("{a:1}", map[string]any{
 
 The `base` slice is shallow-copied, so the caller's slice is not mutated.
 
-### How to turn path tracking off without uninstalling the plugin
-
-Every alt added by `Path` is tagged with group `"path"`. Excluding that group disables path tracking while leaving the plugin installed:
-
-```go
-j.SetOptions(tabnas.Options{
-    Rule: &tabnas.RuleOptions{Exclude: "path"},
-})
-```
-
-
 ## Reference
 
 ```go
@@ -187,10 +176,6 @@ The plugin registers these refs against the grammar:
 | `@list-bo`  | before `list` opens   | Set `r.K["index"] = -1` (no element seen yet).       |
 | `@pair-ao`  | after `pair` opens    | Set child `path` = parent `path` + pair key.         |
 | `@elem-ao`  | after `elem` opens    | Increment `index`; set child `path` = parent + idx.  |
-
-### Group tag
-
-`Path` calls `j.Grammar(..., &GrammarSetting{Rule: {Alt: {G: "path"}}})`, tagging every alt added by this plugin with group `"path"`. Callers can filter rules via `options.rule.include` / `options.rule.exclude`.
 
 
 ## Explanation

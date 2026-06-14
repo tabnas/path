@@ -86,13 +86,12 @@ const Path = (tabnas, _options) => {
     };
     // Declare the rules to hook and attach the refs. The empty rule specs
     // leave the host grammar's rules intact; only the @<rule>-<phase> refs
-    // are wired in as state actions. The `g: 'path'` group tags every alt
-    // this plugin contributes so callers can filter it via rule include/exclude.
+    // are wired in as state actions.
     const grammarDef = {
         rule: Object.fromEntries(HOOKED_RULES.map((name) => [name, {}])),
         ref: refs,
     };
-    tabnas.grammar(grammarDef, { rule: { alt: { g: 'path' } } });
+    tabnas.grammar(grammarDef);
 };
 exports.Path = Path;
 Path.defaults = {};

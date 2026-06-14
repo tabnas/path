@@ -28,12 +28,11 @@ type `Tabnas`). It is the only required dependency. Do not depend on the legacy
   via `j.Grammar(&tabnas.GrammarSpec{Ref: ..., Rule: ...})`. The engine is
   grammar-free, so the plugin only declares the rule *names* it hooks
   (`hookedRules = val/map/pair/list/elem`); it does not define those rules.
-- Differences from the TS port that are intentional, not parity bugs:
-  - Each level's path is a **freshly allocated** `[]any` (Go does not pool/share
-    arrays the way TS does), so callers do not have to copy before retaining it.
-  - The plugin tags every alt it adds with the `path` group via
-    `GrammarSetting{Rule: {Alt: {G: "path"}}}`, so path tracking can be excluded
-    with `options.rule.exclude: "path"`.
+- Difference from the TS port that is intentional, not a parity bug: each
+  level's path is a **freshly allocated** `[]any` (Go does not pool/share arrays
+  the way TS does), so callers do not have to copy before retaining it.
+- The plugin contributes only state-action hooks (`bo`/`ao`), never alternates,
+  so it does not change what the host grammar parses — it only annotates `Rule.K`.
 - Path segments are `any`: map keys are `string`, array indices are `int`
   (deliberately `int`, not `float64`, so a type switch round-trips cleanly).
 - `const Version` is bumped by the `publish-go` Makefile target.

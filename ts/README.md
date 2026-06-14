@@ -100,14 +100,6 @@ j.parse('{a:1}', { path: { base: ['x', 'y'] } })
 // path of value 1 is ['x','y','a']
 ```
 
-### How to turn path tracking off without uninstalling the plugin
-
-Every alt added by `Path` is tagged with group `path`. Excluding that group disables path tracking while leaving the plugin installed:
-
-```js
-am.options({ rule: { exclude: 'path' } })
-```
-
 ### How to use it from Go
 
 The Go port lives in the `go/` directory as module `github.com/jsonicjs/path/go`:
@@ -190,10 +182,6 @@ The plugin registers these refs against the grammar:
 | `@pair-ao`  | after `pair` opens    | Set child `path` = parent `path` + pair key.         |
 | `@elem-ao`  | after `elem` opens    | Increment `index`; set child `path` = parent + idx.  |
 
-### Group tag
-
-`am.grammar(..., { rule: { alt: { g: 'path' } } })` tags every alt added by this plugin with `g: 'path'`, so callers can filter rules via `options.rule.include` / `options.rule.exclude`.
-
 
 ## Explanation
 
@@ -208,8 +196,6 @@ The plugin registers these refs against the grammar:
 **Why depth guards.** Top-level implicit maps and lists can produce a rule at depth 0 that is logically the root. The plugin initialises the root path only at `d === 0` and updates children only at `d > 0`, so implicit structure does not create a phantom leading segment.
 
 **Meta base path.** Passing `meta.path.base` lets a caller parse a fragment as if it were already nested under a known path — useful when composing parsers or when reporting errors in terms of a surrounding document.
-
-**The `g: "path"` tag.** The `g: "path"` group tag marks every alt this plugin contributes, so a parser built with `options.rule.exclude: "path"` can reliably turn path tracking off without uninstalling the plugin.
 
 
 <!--START:options-->

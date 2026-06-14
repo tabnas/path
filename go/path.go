@@ -85,14 +85,7 @@ func Path(j *tabnas.Tabnas, opts map[string]any) error {
 		gsRule[name] = &tabnas.GrammarRuleSpec{}
 	}
 
-	return j.Grammar(
-		&tabnas.GrammarSpec{Ref: refs, Rule: gsRule},
-		&tabnas.GrammarSetting{
-			Rule: &tabnas.GrammarSettingRule{
-				Alt: &tabnas.GrammarSettingAlt{G: "path"},
-			},
-		},
-	)
+	return j.Grammar(&tabnas.GrammarSpec{Ref: refs, Rule: gsRule})
 }
 
 func toPathSlice(v any) []any {
