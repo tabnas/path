@@ -1,8 +1,8 @@
-# jsonic/path (Go port)
+# tabnas/path (Go port)
 
-Go port of the [@jsonic/path](https://github.com/jsonicjs/path) Tabnas parser plugin. It adds property-path tracking to the [Tabnas](https://github.com/tabnas/parser) parser so that rule actions can see the path (keys and indices) leading to the current value.
+Go port of the [@tabnas/path](https://github.com/tabnas/path) Tabnas parser plugin. It adds property-path tracking to the [Tabnas](https://github.com/tabnas/parser) parser so that rule actions can see the path (keys and indices) leading to the current value.
 
-Module path: `github.com/jsonicjs/path/go`
+Module path: `github.com/tabnas/path/go`
 
 This documentation is organised in four parts:
 
@@ -21,7 +21,7 @@ The Tabnas engine ships no grammar of its own — you bring a grammar that defin
 **1. Install**
 
 ```sh
-go get github.com/jsonicjs/path/go
+go get github.com/tabnas/path/go
 ```
 
 **2. Attach a grammar and the plugin**
@@ -29,7 +29,7 @@ go get github.com/jsonicjs/path/go
 ```go
 import (
     tabnas "github.com/tabnas/parser/go"
-    path "github.com/jsonicjs/path/go"
+    path "github.com/tabnas/path/go"
 )
 
 j := tabnas.Make()
@@ -109,7 +109,7 @@ The `base` slice is shallow-copied, so the caller's slice is not mutated.
 ## Reference
 
 ```go
-import path "github.com/jsonicjs/path/go"
+import path "github.com/tabnas/path/go"
 ```
 
 ### Exported identifiers

@@ -1,11 +1,11 @@
 {
-  "name": "@jsonic/path",
+  "name": "@tabnas/path",
   "version": "2.1.0",
   "description": "This plugin allows the Tabnas parser to determine the path to values.",
   "main": "dist/path.js",
   "type": "commonjs",
   "types": "dist/path.d.ts",
-  "homepage": "https://github.com/jsonicjs/path",
+  "homepage": "https://github.com/tabnas/path",
   "keywords": [
     "pattern",
     "matcher",
@@ -16,7 +16,7 @@
   "author": "Richard Rodger (http://richardrodger.com)",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jsonicjs/path.git"
+    "url": "git://github.com/tabnas/path.git"
   },
   "scripts": {
     "test": "node --enable-source-maps --test \"dist-test/*.test.js\"",

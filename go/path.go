@@ -6,7 +6,7 @@ import (
 	tabnas "github.com/tabnas/parser/go"
 )
 
-const Version = "0.1.2"
+const Version = "0.2.0"
 
 type PathOptions struct{}
 

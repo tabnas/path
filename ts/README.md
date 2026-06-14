@@ -1,10 +1,10 @@
-# @jsonic/path (Tabnas parser plugin)
+# @tabnas/path (Tabnas parser plugin)
 
 This plugin adds property-path tracking to the [Tabnas](https://github.com/tabnas/parser) parser so that rule actions can see the path (keys and indices) leading to the current value.
 
 
-[![npm version](https://img.shields.io/npm/v/@jsonic/path.svg)](https://npmjs.com/package/@jsonic/path)
-[![build](https://github.com/jsonicjs/path/actions/workflows/build.yml/badge.svg)](https://github.com/jsonicjs/path/actions/workflows/build.yml)
+[![npm version](https://img.shields.io/npm/v/@tabnas/path.svg)](https://npmjs.com/package/@tabnas/path)
+[![build](https://github.com/tabnas/path/actions/workflows/build.yml/badge.svg)](https://github.com/tabnas/path/actions/workflows/build.yml)
 
 
 | ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |
@@ -28,14 +28,14 @@ The Tabnas engine ships no grammar of its own — you bring a grammar plugin tha
 **1. Install**
 
 ```sh
-npm install @jsonic/path tabnas
+npm install @tabnas/path tabnas
 ```
 
 **2. Attach a grammar and the plugin**
 
 ```js
 const { Tabnas } = require('tabnas')
-const { Path } = require('@jsonic/path')
+const { Path } = require('@tabnas/path')
 
 // `Grammar` is any plugin that defines val/map/pair/list/elem rules.
 // A complete, minimal example lives in test/path.test.ts.
@@ -102,12 +102,12 @@ j.parse('{a:1}', { path: { base: ['x', 'y'] } })
 
 ### How to use it from Go
 
-The Go port lives in the `go/` directory as module `github.com/jsonicjs/path/go`:
+The Go port lives in the `go/` directory as module `github.com/tabnas/path/go`:
 
 ```go
 import (
     tabnas "github.com/tabnas/parser/go"
-    path "github.com/jsonicjs/path/go"
+    path "github.com/tabnas/path/go"
 )
 
 j := tabnas.Make()
@@ -125,7 +125,7 @@ Inside a Go rule action, the path is `r.K["path"].([]any)`.
 ### JavaScript/TypeScript
 
 ```ts
-import { Path, PathOptions } from '@jsonic/path'
+import { Path, PathOptions } from '@tabnas/path'
 ```
 
 - `Path: Plugin` — the Tabnas plugin function. Pass to `am.use(Path)` *after* the grammar that defines the hooked rules.
@@ -134,7 +134,7 @@ import { Path, PathOptions } from '@jsonic/path'
 ### Go
 
 ```go
-import path "github.com/jsonicjs/path/go"
+import path "github.com/tabnas/path/go"
 ```
 
 - `path.Path(j *tabnas.Tabnas, opts map[string]any) error` — plugin function, registered with `j.Use(path.Path, nil)`.

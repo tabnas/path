@@ -1,4 +1,4 @@
-module github.com/jsonicjs/path/go
+module github.com/tabnas/path/go
 
 go 1.24.7
 

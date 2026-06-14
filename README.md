@@ -1,4 +1,4 @@
-# @jsonic/path
+# @tabnas/path
 
 This plugin allows the [Tabnas](https://github.com/tabnas/parser) parser to determine the path to values.
 

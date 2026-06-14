@@ -1,4 +1,4 @@
-# Agent guide: @jsonic/path
+# Agent guide: @tabnas/path
 
 Guidance for AI agents and contributors working in this repository. Read this
 before changing code. Per-language notes live in [`ts/AGENTS.md`](ts/AGENTS.md)
