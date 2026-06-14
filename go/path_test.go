@@ -1,16 +1,14 @@
-/* Copyright (c) 2022-2025 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2022-2026 Richard Rodger and other contributors, MIT License */
 
 package path
 
 import (
 	"fmt"
 	"reflect"
-	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 
-	jsonic "github.com/jsonicjs/jsonic/go"
+	tabnas "github.com/tabnas/parser/go"
 )
 
 func assert(t *testing.T, name string, got, want any) {
@@ -20,10 +18,125 @@ func assert(t *testing.T, name string, got, want any) {
 	}
 }
 
+// installGrammar registers a small, deliberately-minimal grammar: brace
+// maps with bare (unquoted) keys, bracket lists, and scalar values — just
+// enough nested structure to exercise the Path plugin. The Tabnas engine
+// ships no grammar of its own, so tests bring their own; this fixture
+// depends on nothing but the Tabnas parser itself. The rule names
+// (val/map/pair/list/elem) are the ones the Path plugin hooks.
+func installGrammar(j *tabnas.Tabnas) {
+	j.Rule("val", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			r.Node = tabnas.Undefined
+		}}
+		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			if !tabnas.IsUndefined(r.Node) {
+				return
+			}
+			if !tabnas.IsUndefined(r.Child.Node) {
+				r.Node = r.Child.Node
+				return
+			}
+			if r.OS == 0 {
+				r.Node = tabnas.Undefined
+				return
+			}
+			r.Node = r.O0.ResolveVal(r, ctx)
+		}}
+		rs.Open = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "map", B: 1},
+			{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "list", B: 1},
+			{S: [][]tabnas.Tin{tabnas.TinSetVAL}},
+		}
+		rs.Close = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinZZ}}},
+			{B: 1},
+		}
+	})
+
+	j.Rule("map", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			r.Node = make(map[string]any)
+		}}
+		rs.Open = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinOB}, {tabnas.TinCB}}, B: 1},
+			{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "pair"},
+		}
+		rs.Close = []*tabnas.AltSpec{{S: [][]tabnas.Tin{{tabnas.TinCB}}}}
+	})
+
+	j.Rule("list", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			r.Node = make([]any, 0)
+		}}
+		rs.Open = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinOS}, {tabnas.TinCS}}, B: 1},
+			{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "elem"},
+		}
+		rs.Close = []*tabnas.AltSpec{{S: [][]tabnas.Tin{{tabnas.TinCS}}}}
+	})
+
+	j.Rule("pair", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			if _, ok := r.U["pair"]; !ok {
+				return
+			}
+			key, _ := r.U["key"].(string)
+			val := r.Child.Node
+			if tabnas.IsUndefined(val) {
+				val = nil
+			}
+			m, _ := r.Node.(map[string]any)
+			m[key] = val
+			r.Node = m
+		}}
+		rs.Open = []*tabnas.AltSpec{{
+			S: [][]tabnas.Tin{tabnas.TinSetKEY, {tabnas.TinCL}},
+			P: "val",
+			U: map[string]any{"pair": true},
+			A: func(r *tabnas.Rule, ctx *tabnas.Context) {
+				r.U["key"] = fmt.Sprintf("%v", r.O0.ResolveVal(r, ctx))
+			},
+		}}
+		rs.Close = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "pair"},
+			{S: [][]tabnas.Tin{{tabnas.TinCB}}, B: 1},
+		}
+	})
+
+	j.Rule("elem", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
+		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+			if tabnas.IsUndefined(r.Child.Node) {
+				return
+			}
+			s, _ := r.Node.([]any)
+			r.Node = append(s, r.Child.Node)
+			if r.Parent != tabnas.NoRule && r.Parent != nil {
+				r.Parent.Node = r.Node
+			}
+		}}
+		rs.Open = []*tabnas.AltSpec{{P: "val"}}
+		rs.Close = []*tabnas.AltSpec{
+			{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "elem"},
+			{S: [][]tabnas.Tin{{tabnas.TinCS}}, B: 1},
+		}
+	})
+}
+
+// newParser builds a Tabnas instance with the local grammar and the Path
+// plugin. The grammar is installed first so the plugin's @<rule>-<phase>
+// refs wire onto the existing rules.
+func newParser() *tabnas.Tabnas {
+	j := tabnas.Make()
+	installGrammar(j)
+	j.Use(Path, nil)
+	return j
+}
+
 // addPathCapture adds a val AC callback that annotates nodes with path info.
-func addPathCapture(j *jsonic.Jsonic) {
-	j.Rule("val", func(rs *jsonic.RuleSpec, p *jsonic.Parser) {
-		rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
+func addPathCapture(j *tabnas.Tabnas) {
+	j.Rule("val", func(rs *tabnas.RuleSpec, p *tabnas.Parser) {
+		rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
 			path := toPathSlice(r.K["path"])
 			switch node := r.Node.(type) {
 			case map[string]any:
@@ -38,7 +151,7 @@ func addPathCapture(j *jsonic.Jsonic) {
 }
 
 func TestHappy(t *testing.T) {
-	j := MakeJsonic()
+	j := newParser()
 	result, err := j.Parse("{a:{b:1,c:[2,3]}}")
 	if err != nil {
 		t.Fatal(err)
@@ -46,11 +159,11 @@ func TestHappy(t *testing.T) {
 	m := result.(map[string]any)
 	a := m["a"].(map[string]any)
 	assert(t, "b", a["b"], float64(1))
+	assert(t, "c", a["c"], []any{float64(2), float64(3)})
 }
 
 func TestPathTracking(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
+	j := newParser()
 	addPathCapture(j)
 
 	result, err := j.Parse("{a:{b:1}}")
@@ -67,11 +180,9 @@ func TestPathTracking(t *testing.T) {
 }
 
 func TestMetaBasePath(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
-
-	j.Rule("val", func(rs *jsonic.RuleSpec, p *jsonic.Parser) {
-		rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
+	j := newParser()
+	j.Rule("val", func(rs *tabnas.RuleSpec, p *tabnas.Parser) {
+		rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
 			path := toPathSlice(r.K["path"])
 			if node, ok := r.Node.(map[string]any); ok {
 				node["$"] = fmtPath(path)
@@ -93,8 +204,7 @@ func TestMetaBasePath(t *testing.T) {
 }
 
 func TestObjectPaths(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
+	j := newParser()
 	addPathCapture(j)
 
 	result, err := j.Parse("{a:1}")
@@ -116,8 +226,7 @@ func TestObjectPaths(t *testing.T) {
 }
 
 func TestNestedObjectPaths(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
+	j := newParser()
 	addPathCapture(j)
 
 	result, err := j.Parse("{x:{a:1}}")
@@ -132,8 +241,7 @@ func TestNestedObjectPaths(t *testing.T) {
 }
 
 func TestArrayPaths(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
+	j := newParser()
 	addPathCapture(j)
 
 	result, err := j.Parse("[1,2,3]")
@@ -151,10 +259,9 @@ func TestArrayPaths(t *testing.T) {
 }
 
 // TestDeepMixedPaths checks paths through a deeply nested mix of objects and
-// arrays, mirroring the TypeScript `transform` test.
+// arrays.
 func TestDeepMixedPaths(t *testing.T) {
-	j := jsonic.Make()
-	j.Use(Path, nil)
+	j := newParser()
 	addPathCapture(j)
 
 	// Deep object nesting.
@@ -185,105 +292,6 @@ func TestDeepMixedPaths(t *testing.T) {
 	dArr := obj["d"].([]any)
 	assert(t, "[2].d[0]", dArr[0], "<2:2,d,0>")
 	assert(t, "[2].d[1]", dArr[1], "<3:2,d,1>")
-}
-
-// evalExpr evaluates a sum-of-products integer expression like "2+3*4".
-// `*` binds tighter than `+`; there are no parentheses.
-func evalExpr(src string) int {
-	sum := 0
-	for _, term := range strings.Split(src, "+") {
-		prod := 1
-		for _, f := range strings.Split(term, "*") {
-			n, _ := strconv.Atoi(f)
-			prod *= n
-		}
-		sum += prod
-	}
-	return sum
-}
-
-// TestLocalGrammar exercises the plugin with a small grammar that is not JSON:
-// integer arithmetic expressions. A custom value matcher lexes a whole
-// expression as one value token; a `val` action then evaluates it and records
-// the path the Path plugin tracked. This mirrors the TypeScript `expr` test and
-// confirms path tracking works for non-JSON value syntax. It depends only on
-// the Jsonic parser itself — no other production dependency.
-func TestLocalGrammar(t *testing.T) {
-	const exprMark = "__expr__"
-	expr := regexp.MustCompile(`^\d+(?:[+*]\d+)+`)
-
-	newParser := func() *jsonic.Jsonic {
-		j := jsonic.Make()
-		j.Use(Path, nil)
-		if err := j.Grammar(&jsonic.GrammarSpec{Options: &jsonic.Options{
-			Match: &jsonic.MatchOptions{
-				Value: map[string]*jsonic.MatchValueSpec{
-					"exprLite": {
-						Match: expr,
-						Val: func(m []string) any {
-							return map[string]any{exprMark: true, "src": m[0]}
-						},
-					},
-				},
-			},
-		}}); err != nil {
-			t.Fatal(err)
-		}
-		j.Rule("val", func(rs *jsonic.RuleSpec, _ *jsonic.Parser) {
-			rs.AC = append(rs.AC, func(r *jsonic.Rule, ctx *jsonic.Context) {
-				node, ok := r.Node.(map[string]any)
-				if !ok {
-					return
-				}
-				if mark, _ := node[exprMark].(bool); !mark {
-					return
-				}
-				path := toPathSlice(r.K["path"])
-				cp := make([]any, len(path))
-				copy(cp, path)
-				r.Node = map[string]any{
-					"expr": evalExpr(node["src"].(string)),
-					"k":    r.K["key"],
-					"p":    cp,
-				}
-			})
-		})
-		return j
-	}
-
-	cases := []struct {
-		src  string
-		want int
-	}{
-		{"{a:2+3*4}", 14},
-		{"a:2+3*4", 14},
-		{"a:2*3+4", 10},
-		{"a:2+3", 5},
-		{"a:2*3", 6},
-	}
-	for _, tc := range cases {
-		result, err := newParser().Parse(tc.src)
-		if err != nil {
-			t.Fatalf("%s: %v", tc.src, err)
-		}
-		want := map[string]any{
-			"a": map[string]any{"expr": tc.want, "k": "a", "p": []any{"a"}},
-		}
-		assert(t, tc.src, result, want)
-	}
-}
-
-func TestMakeJsonic(t *testing.T) {
-	j := MakeJsonic()
-	result, err := j.Parse("{a:1}")
-	if err != nil {
-		t.Fatal(err)
-	}
-	m, ok := result.(map[string]any)
-	if !ok {
-		t.Fatalf("expected map, got %T", result)
-	}
-	assert(t, "a", m["a"], float64(1))
 }
 
 // fmtPath formats a path slice as "<a,b,c>".

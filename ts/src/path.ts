@@ -1,26 +1,16 @@
-/* Copyright (c) 2022-2024 Richard Rodger, MIT License */
+/* Copyright (c) 2022-2026 Richard Rodger, MIT License */
 
-import { Jsonic, Plugin, Rule, Context } from 'jsonic'
+import { Tabnas, Plugin, Rule, Context } from 'tabnas'
 
 type PathOptions = {}
 
-// --- BEGIN EMBEDDED path-grammar.jsonic ---
-const grammarText = `
-# Path Grammar Definition
-# Declares rule names so @<rulename>-<phase> refs auto-wire as state actions.
-# Parsed by a standard Jsonic instance and passed to jsonic.grammar().
-
-{
-  rule: {
-    val:  {}
-    map:  {}
-    pair: {}
-    list: {}
-    elem: {}
-  }
-}
-`
-// --- END EMBEDDED path-grammar.jsonic ---
+// The host-grammar rules the plugin hooks. The Tabnas engine ships no
+// grammar of its own, so these names must match the rules supplied by
+// whatever grammar plugin the consumer installs. The standard
+// value/map/pair/list/elem rule set uses these names. Each empty rule
+// entry causes tabnas.grammar() to auto-wire any matching
+// @<rulename>-<phase> function refs as state actions.
+const HOOKED_RULES = ['val', 'map', 'pair', 'list', 'elem']
 
 // Preallocated array pool for path tracking. Each depth level gets
 // a reusable array of that length. The arrays are mutated in place
@@ -41,7 +31,7 @@ for (let i = 0; i <= MAX_PATH_DEPTH; i++) {
  * Use the Rule.k key-value store so that the path is propagated to children and followers.
  * Depth must be greater than 0 - ensures path only starts once top level implicit is set up.
  */
-const Path: Plugin = (jsonic: Jsonic, _options: PathOptions) => {
+const Path: Plugin = (tabnas: Tabnas, _options: PathOptions) => {
   const refs: Record<string, Function> = {
     '@val-bo': (r: Rule, ctx: Context) => {
       // At top level, create path array, or inherit from meta context.
@@ -101,10 +91,14 @@ const Path: Plugin = (jsonic: Jsonic, _options: PathOptions) => {
     },
   }
 
-  // Parse embedded grammar definition using a separate standard Jsonic instance.
-  const grammarDef: any = Jsonic.make()(grammarText)
-  grammarDef.ref = refs
-  jsonic.grammar(grammarDef)
+  // Declare the rules to hook and attach the refs. The empty rule specs
+  // leave the host grammar's rules intact; only the @<rule>-<phase> refs
+  // are wired in as state actions.
+  const grammarDef: any = {
+    rule: Object.fromEntries(HOOKED_RULES.map((name) => [name, {}])),
+    ref: refs,
+  }
+  tabnas.grammar(grammarDef)
 }
 
 Path.defaults = {} as PathOptions
