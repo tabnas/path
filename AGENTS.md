@@ -70,13 +70,21 @@ cd go && go build ./... && go test ./...
 
 ## Debugging
 
-Use the Tabnas `Debug` facility rather than scattering print statements:
+Use the Tabnas debug facility rather than scattering print statements. There are
+two options; both are dev-only — never add them to the plugin's dependencies.
 
-- Go: `j.Use(tabnas.Debug, map[string]any{"trace": true})` logs every lex token
-  and rule transition; `tabnas.Describe(j)` dumps the configured tokens, rules,
-  matchers, and plugins. This is the fastest way to see how `Path` is wired and
-  what the lexer produced.
-- TS: the `tabnas` `Debug` plugin offers the equivalent tracing.
+- **Dedicated `tabnas/debug` package** (richer output, recommended for
+  development): Go `github.com/tabnas/debug/go` (`debug.Debug` trace plugin,
+  `debug.Describe(j) (string, error)`), TS `@tabnas/debug`. Use it from a scratch
+  module/script that also installs your grammar and `Path`, so `Describe` shows
+  how `Path` is wired and a traced parse shows the lex/rule steps.
+- **Bundled fallback** (zero extra dependency): the parser still ships
+  `tabnas.Debug` and `tabnas.Describe(j) string` in the `tabnas` package — handy
+  for a quick trace without pulling in another module.
+
+Note: as of the latest parser main the TS `@tabnas/debug` package does not build
+cleanly against it (an upstream type issue), so for TS debugging prefer the
+bundled `tabnas.Debug` until that is fixed.
 
 ## Layout
 

@@ -26,10 +26,10 @@ func assert(t *testing.T, name string, got, want any) {
 // (val/map/pair/list/elem) are the ones the Path plugin hooks.
 func installGrammar(j *tabnas.Tabnas) {
 	j.Rule("val", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
-		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddBO(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			r.Node = tabnas.Undefined
-		}}
-		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		})
+		rs.AddBC(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if !tabnas.IsUndefined(r.Node) {
 				return
 			}
@@ -42,42 +42,42 @@ func installGrammar(j *tabnas.Tabnas) {
 				return
 			}
 			r.Node = r.O0.ResolveVal(r, ctx)
-		}}
-		rs.Open = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "map", B: 1},
-			{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "list", B: 1},
-			{S: [][]tabnas.Tin{tabnas.TinSetVAL}},
-		}
-		rs.Close = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinZZ}}},
-			{B: 1},
-		}
+		})
+		rs.AddOpen(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "map", B: 1},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "list", B: 1},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{tabnas.TinSetVAL}},
+		)
+		rs.AddClose(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinZZ}}},
+			&tabnas.AltSpec{B: 1},
+		)
 	})
 
 	j.Rule("map", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
-		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddBO(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			r.Node = make(map[string]any)
-		}}
-		rs.Open = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinOB}, {tabnas.TinCB}}, B: 1},
-			{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "pair"},
-		}
-		rs.Close = []*tabnas.AltSpec{{S: [][]tabnas.Tin{{tabnas.TinCB}}}}
+		})
+		rs.AddOpen(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOB}, {tabnas.TinCB}}, B: 1},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOB}}, P: "pair"},
+		)
+		rs.AddClose(&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCB}}})
 	})
 
 	j.Rule("list", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
-		rs.BO = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddBO(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			r.Node = make([]any, 0)
-		}}
-		rs.Open = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinOS}, {tabnas.TinCS}}, B: 1},
-			{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "elem"},
-		}
-		rs.Close = []*tabnas.AltSpec{{S: [][]tabnas.Tin{{tabnas.TinCS}}}}
+		})
+		rs.AddOpen(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOS}, {tabnas.TinCS}}, B: 1},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinOS}}, P: "elem"},
+		)
+		rs.AddClose(&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCS}}})
 	})
 
 	j.Rule("pair", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
-		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddBC(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if _, ok := r.U["pair"]; !ok {
 				return
 			}
@@ -89,23 +89,23 @@ func installGrammar(j *tabnas.Tabnas) {
 			m, _ := r.Node.(map[string]any)
 			m[key] = val
 			r.Node = m
-		}}
-		rs.Open = []*tabnas.AltSpec{{
+		})
+		rs.AddOpen(&tabnas.AltSpec{
 			S: [][]tabnas.Tin{tabnas.TinSetKEY, {tabnas.TinCL}},
 			P: "val",
 			U: map[string]any{"pair": true},
 			A: func(r *tabnas.Rule, ctx *tabnas.Context) {
 				r.U["key"] = fmt.Sprintf("%v", r.O0.ResolveVal(r, ctx))
 			},
-		}}
-		rs.Close = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "pair"},
-			{S: [][]tabnas.Tin{{tabnas.TinCB}}, B: 1},
-		}
+		})
+		rs.AddClose(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "pair"},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCB}}, B: 1},
+		)
 	})
 
 	j.Rule("elem", func(rs *tabnas.RuleSpec, _ *tabnas.Parser) {
-		rs.BC = []tabnas.StateAction{func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddBC(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			if tabnas.IsUndefined(r.Child.Node) {
 				return
 			}
@@ -114,12 +114,12 @@ func installGrammar(j *tabnas.Tabnas) {
 			if r.Parent != tabnas.NoRule && r.Parent != nil {
 				r.Parent.Node = r.Node
 			}
-		}}
-		rs.Open = []*tabnas.AltSpec{{P: "val"}}
-		rs.Close = []*tabnas.AltSpec{
-			{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "elem"},
-			{S: [][]tabnas.Tin{{tabnas.TinCS}}, B: 1},
-		}
+		})
+		rs.AddOpen(&tabnas.AltSpec{P: "val"})
+		rs.AddClose(
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCA}}, R: "elem"},
+			&tabnas.AltSpec{S: [][]tabnas.Tin{{tabnas.TinCS}}, B: 1},
+		)
 	})
 }
 
@@ -136,7 +136,7 @@ func newParser() *tabnas.Tabnas {
 // addPathCapture adds a val AC callback that annotates nodes with path info.
 func addPathCapture(j *tabnas.Tabnas) {
 	j.Rule("val", func(rs *tabnas.RuleSpec, p *tabnas.Parser) {
-		rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddAC(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			path := toPathSlice(r.K["path"])
 			switch node := r.Node.(type) {
 			case map[string]any:
@@ -182,7 +182,7 @@ func TestPathTracking(t *testing.T) {
 func TestMetaBasePath(t *testing.T) {
 	j := newParser()
 	j.Rule("val", func(rs *tabnas.RuleSpec, p *tabnas.Parser) {
-		rs.AC = append(rs.AC, func(r *tabnas.Rule, ctx *tabnas.Context) {
+		rs.AddAC(func(r *tabnas.Rule, ctx *tabnas.Context) {
 			path := toPathSlice(r.K["path"])
 			if node, ok := r.Node.(map[string]any); ok {
 				node["$"] = fmtPath(path)
