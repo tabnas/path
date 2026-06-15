@@ -39,13 +39,27 @@ type `Tabnas`). It is the only required dependency. Do not depend on the legacy
 
 ## Debugging
 
+Prefer the dedicated `github.com/tabnas/debug/go` package (dev-only — do not add
+it to this module's dependencies; use it from a scratch module with a `replace`
+pointing at a local checkout):
+
 ```go
+import debug "github.com/tabnas/debug/go"
+
 j := tabnas.Make()
 installGrammar(j)
 j.Use(path.Path, nil)
-j.Use(tabnas.Debug, map[string]any{"trace": true}) // log lex + rule steps
-fmt.Println(tabnas.Describe(j))                     // dump tokens/rules/plugins
+
+report, err := debug.Describe(j)  // (string, error) — dump tokens/rules/plugins
+if err != nil { panic(err) }
+fmt.Println(report)
+
+j.Use(debug.Debug, map[string]any{"trace": true}) // log lex + rule steps
+j.Parse("{a:1}")
 ```
+
+The parser also bundles `tabnas.Debug` and `tabnas.Describe(j) string` (returns a
+plain string) as a zero-dependency fallback.
 
 ## Tests
 
