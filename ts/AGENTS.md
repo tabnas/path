@@ -7,12 +7,12 @@ behaviour changes start here.
 ## Commands
 
 ```sh
-npm install        # devDeps (typescript, @types/node); tabnas is a peer dep
+npm install        # devDeps (typescript, @types/node); @tabnas/parser is a peer dep
 npm run build      # tsc build of src + test
 npm test           # node --test over dist-test
 ```
 
-`tabnas` is a **peer** dependency, not installed by `npm install`. To build and
+`@tabnas/parser` is a **peer** dependency, not installed by `npm install`. To build and
 test against the GitHub `main` branch, fetch it, build it, and install it without
 saving:
 
@@ -26,7 +26,7 @@ npm install --no-save work/parser-main/ts
 
 ## Source notes
 
-- `src/path.ts` holds the plugin. It imports `Tabnas` and friends from `tabnas`
+- `src/path.ts` holds the plugin. It imports `Tabnas` and friends from `@tabnas/parser`
   and registers its refs via `tn.grammar({ rule: {...}, ref: {...} })`. The
   engine is grammar-free, so the plugin only declares the rule *names* it hooks
   (`val/map/pair/list/elem`) — it does not define those rules.
@@ -42,7 +42,7 @@ npm install --no-save work/parser-main/ts
 
 `test/path.test.ts` defines a small **local grammar** (`Grammar`) — bare-key
 brace maps and bracket lists — declared with the standard `tn.grammar({...})`
-form. It depends only on `tabnas`. Install the grammar before `Path`
+form. It depends only on `@tabnas/parser`. Install the grammar before `Path`
 (`new Tabnas().use(Grammar).use(Path)`) so the plugin's `@<rule>-<phase>` refs
 wire onto rules that already exist. The Go suite mirrors this fixture in
 `installGrammar`; keep the two in sync.

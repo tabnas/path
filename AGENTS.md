@@ -31,7 +31,7 @@ Two implementations are kept in lock-step:
    a fresh path slice per level instead of pooling) but the *observable* path
    values must match the TS output for the same input.
 2. **The only production dependency is the Tabnas parser itself.** TS declares it
-   as a peer dependency (`tabnas`); Go requires `github.com/tabnas/parser/go`
+   as a peer dependency (`@tabnas/parser`); Go requires `github.com/tabnas/parser/go`
    (Go package name `tabnas`, main type `Tabnas`). Do not depend on the legacy
    `@tabnas/jsonic` shim, and do not add any other runtime dependency.
 3. **Tests bring their own grammar.** Because the engine ships no grammar, each

@@ -28,13 +28,13 @@ The Tabnas engine ships no grammar of its own — you bring a grammar plugin tha
 **1. Install**
 
 ```sh
-npm install @tabnas/path tabnas
+npm install @tabnas/path @tabnas/parser
 ```
 
 **2. Attach a grammar and the plugin**
 
 ```js
-const { Tabnas } = require('tabnas')
+const { Tabnas } = require('@tabnas/parser')
 const { Path } = require('@tabnas/path')
 
 // `Grammar` is any plugin that defines val/map/pair/list/elem rules.

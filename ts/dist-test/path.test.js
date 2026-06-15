@@ -6,7 +6,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const node_assert_1 = __importDefault(require("node:assert"));
-const tabnas_1 = require("tabnas");
+const parser_1 = require("@tabnas/parser");
 const path_1 = require("../dist/path");
 // A small, deliberately-minimal grammar: brace maps with bare (unquoted)
 // keys, bracket lists, and scalar values — just enough nested structure to
@@ -71,7 +71,7 @@ const Grammar = (tn) => {
 // Build a parser with the local grammar and the Path plugin. The grammar
 // is installed first so the plugin's @<rule>-<phase> refs wire onto the
 // existing rules.
-const make = () => new tabnas_1.Tabnas().use(Grammar).use(path_1.Path);
+const make = () => new parser_1.Tabnas().use(Grammar).use(path_1.Path);
 // Annotate nodes with their tracked path: maps get a `$` property, scalars
 // become `<value:path>`, arrays are left as-is (their elements are
 // annotated individually).

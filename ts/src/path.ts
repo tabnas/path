@@ -1,6 +1,6 @@
 /* Copyright (c) 2022-2026 Richard Rodger, MIT License */
 
-import { Tabnas, Plugin, Rule, Context } from 'tabnas'
+import { Tabnas, Plugin, Rule, Context } from '@tabnas/parser'
 
 type PathOptions = {}
 
