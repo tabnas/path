@@ -54,8 +54,8 @@ j.parse('{a:{b:1,c:[2,3]}}')
 `Path` itself only populates `Rule.k.path`. To *see* it, add a second plugin that reads the path inside a rule action:
 
 ```js
-const capture = (am) => {
-  am.rule('val', (rs) => {
+const capture = (tn) => {
+  tn.rule('val', (rs) => {
     rs.ac(false, (r) => {
       if (null === r.node || 'object' !== typeof r.node) {
         r.node = `<${r.node}:${r.k.path}>`
@@ -84,7 +84,7 @@ You have now seen the plugin populate the path at every level: the root is `[]`,
 `Path` runs its hooks first (`bo`/`ao`). Later plugins can read `r.k.path` inside `bc`/`ac` actions or from within alt actions:
 
 ```js
-am.rule('val', (rs) => rs.ac((r) => {
+tn.rule('val', (rs) => rs.ac((r) => {
   console.log('path =', r.k.path, 'value =', r.node)
 }))
 ```
@@ -128,7 +128,7 @@ Inside a Go rule action, the path is `r.K["path"].([]any)`.
 import { Path, PathOptions } from '@tabnas/path'
 ```
 
-- `Path: Plugin` — the Tabnas plugin function. Pass to `am.use(Path)` *after* the grammar that defines the hooked rules.
+- `Path: Plugin` — the Tabnas plugin function. Pass to `tn.use(Path)` *after* the grammar that defines the hooked rules.
 - `PathOptions` — currently an empty object type; no options are accepted.
 
 ### Go
@@ -148,7 +148,7 @@ import path "github.com/tabnas/path/go"
 val  map  pair  list  elem
 ```
 
-Each is declared with an empty rule spec so `am.grammar()` auto-wires the matching `@<rulename>-<phase>` function refs as state actions, without otherwise altering the host grammar's rules.
+Each is declared with an empty rule spec so `tn.grammar()` auto-wires the matching `@<rulename>-<phase>` function refs as state actions, without otherwise altering the host grammar's rules.
 
 ### Values written to `Rule.k` / `Rule.K`
 

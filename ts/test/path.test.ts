@@ -15,10 +15,10 @@ import { Path } from '../dist/path'
 // so tests bring their own; this fixture depends on nothing but the Tabnas
 // parser itself. The rule names (val/map/pair/list/elem) are the ones the
 // Path plugin hooks.
-const Grammar: Plugin = (am: Tabnas) => {
-  const { TX, ST } = am.token
+const Grammar: Plugin = (tn: Tabnas) => {
+  const { TX, ST } = tn.token
 
-  am.grammar({
+  tn.grammar({
     ref: {
       '@pairkey': (r: Rule) => {
         const kt = r.o0
@@ -80,8 +80,8 @@ const make = () => new Tabnas().use(Grammar).use(Path)
 // Annotate nodes with their tracked path: maps get a `$` property, scalars
 // become `<value:path>`, arrays are left as-is (their elements are
 // annotated individually).
-const capture: Plugin = (am: Tabnas) => {
-  am.rule('val', (rs: any) =>
+const capture: Plugin = (tn: Tabnas) => {
+  tn.rule('val', (rs: any) =>
     rs.ac(false, (r: Rule) => {
       if (null === r.node || 'object' !== typeof r.node) {
         // String coercion reads path immediately — safe.
@@ -112,8 +112,8 @@ describe('path', () => {
 
 
   test('meta', () => {
-    const j = make().use((am: Tabnas) => {
-      am.rule('val', (rs: any) =>
+    const j = make().use((tn: Tabnas) => {
+      tn.rule('val', (rs: any) =>
         rs.ac(false, (r: Rule) => {
           if (null !== r.node && 'object' === typeof r.node && !Array.isArray(r.node)) {
             r.node.$ = `<${r.k.path}>`
@@ -178,8 +178,8 @@ describe('path', () => {
     // Verify that r.k.path is a shared mutable array (pooled per depth).
     // Client code that needs to retain it must copy.
     const captured: any[] = []
-    const j = make().use((am: Tabnas) => {
-      am.rule('val', (rs: any) =>
+    const j = make().use((tn: Tabnas) => {
+      tn.rule('val', (rs: any) =>
         rs.ac(false, (r: Rule) => {
           if (null === r.node || 'object' !== typeof r.node) {
             captured.push({

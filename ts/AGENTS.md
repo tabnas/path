@@ -27,7 +27,7 @@ npm install --no-save work/parser-main/ts
 ## Source notes
 
 - `src/path.ts` holds the plugin. It imports `Tabnas` and friends from `tabnas`
-  and registers its refs via `am.grammar({ rule: {...}, ref: {...} })`. The
+  and registers its refs via `tn.grammar({ rule: {...}, ref: {...} })`. The
   engine is grammar-free, so the plugin only declares the rule *names* it hooks
   (`val/map/pair/list/elem`) — it does not define those rules.
 - The path array is drawn from a preallocated pool and **mutated in place** as
@@ -41,7 +41,7 @@ npm install --no-save work/parser-main/ts
 ## Tests
 
 `test/path.test.ts` defines a small **local grammar** (`Grammar`) — bare-key
-brace maps and bracket lists — declared with the standard `am.grammar({...})`
+brace maps and bracket lists — declared with the standard `tn.grammar({...})`
 form. It depends only on `tabnas`. Install the grammar before `Path`
 (`new Tabnas().use(Grammar).use(Path)`) so the plugin's `@<rule>-<phase>` refs
 wire onto rules that already exist. The Go suite mirrors this fixture in

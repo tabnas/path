@@ -14,9 +14,9 @@ const path_1 = require("../dist/path");
 // so tests bring their own; this fixture depends on nothing but the Tabnas
 // parser itself. The rule names (val/map/pair/list/elem) are the ones the
 // Path plugin hooks.
-const Grammar = (am) => {
-    const { TX, ST } = am.token;
-    am.grammar({
+const Grammar = (tn) => {
+    const { TX, ST } = tn.token;
+    tn.grammar({
         ref: {
             '@pairkey': (r) => {
                 const kt = r.o0;
@@ -75,8 +75,8 @@ const make = () => new tabnas_1.Tabnas().use(Grammar).use(path_1.Path);
 // Annotate nodes with their tracked path: maps get a `$` property, scalars
 // become `<value:path>`, arrays are left as-is (their elements are
 // annotated individually).
-const capture = (am) => {
-    am.rule('val', (rs) => rs.ac(false, (r) => {
+const capture = (tn) => {
+    tn.rule('val', (rs) => rs.ac(false, (r) => {
         if (null === r.node || 'object' !== typeof r.node) {
             // String coercion reads path immediately — safe.
             r.node = `<${r.node}:${r.k.path}>`;
@@ -99,8 +99,8 @@ const capture = (am) => {
         node_assert_1.default.equal(out.a.b, '<1:a,b>');
     });
     (0, node_test_1.test)('meta', () => {
-        const j = make().use((am) => {
-            am.rule('val', (rs) => rs.ac(false, (r) => {
+        const j = make().use((tn) => {
+            tn.rule('val', (rs) => rs.ac(false, (r) => {
                 if (null !== r.node && 'object' === typeof r.node && !Array.isArray(r.node)) {
                     r.node.$ = `<${r.k.path}>`;
                 }
@@ -146,8 +146,8 @@ const capture = (am) => {
         // Verify that r.k.path is a shared mutable array (pooled per depth).
         // Client code that needs to retain it must copy.
         const captured = [];
-        const j = make().use((am) => {
-            am.rule('val', (rs) => rs.ac(false, (r) => {
+        const j = make().use((tn) => {
+            tn.rule('val', (rs) => rs.ac(false, (r) => {
                 if (null === r.node || 'object' !== typeof r.node) {
                     captured.push({
                         live: r.k.path,
