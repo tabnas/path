@@ -44,7 +44,7 @@ const j = new Tabnas().use(Grammar).use(Path)
 
 Parsing works exactly as it would without the plugin:
 
-```js
+```js ignore
 j.parse('{a:{b:1,c:[2,3]}}')
 // => { a: { b: 1, c: [ 2, 3 ] } }
 ```
@@ -53,7 +53,7 @@ j.parse('{a:{b:1,c:[2,3]}}')
 
 `Path` itself only populates `Rule.k.path`. To *see* it, add a second plugin that reads the path inside a rule action:
 
-```js
+```js ignore
 const capture = (tn) => {
   tn.rule('val', (rs) => {
     rs.ac(false, (r) => {
@@ -95,7 +95,7 @@ tn.rule('val', (rs) => rs.ac((r) => {
 
 Pass a base path via Tabnas meta and `Path` will use it for the root:
 
-```js
+```js ignore
 j.parse('{a:1}', { path: { base: ['x', 'y'] } })
 // path of value 1 is ['x','y','a']
 ```
