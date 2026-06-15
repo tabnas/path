@@ -20,7 +20,7 @@ go get github.com/tabnas/parser/go@main
 
 The dependency is `github.com/tabnas/parser/go` (Go package name `tabnas`, main
 type `Tabnas`). It is the only required dependency. Do not depend on the legacy
-`jsonicjs/jsonic` module.
+`github.com/tabnas/jsonic/go` shim module.
 
 ## Source notes
 

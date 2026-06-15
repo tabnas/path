@@ -33,7 +33,7 @@ Two implementations are kept in lock-step:
 2. **The only production dependency is the Tabnas parser itself.** TS declares it
    as a peer dependency (`tabnas`); Go requires `github.com/tabnas/parser/go`
    (Go package name `tabnas`, main type `Tabnas`). Do not depend on the legacy
-   `jsonic` / `jsonicjs` packages, and do not add any other runtime dependency.
+   `@tabnas/jsonic` shim, and do not add any other runtime dependency.
 3. **Tests bring their own grammar.** Because the engine ships no grammar, each
    test suite defines a small, local grammar (bare-key brace maps and bracket
    lists — see `installGrammar` in `go/path_test.go` and `Grammar` in
