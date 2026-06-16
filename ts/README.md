@@ -79,6 +79,37 @@ You have now seen the plugin populate the path at every level: the root is `[]`,
 
 ## How-to guides
 
+### Runnable example
+
+A complete, self-contained example using the [`@tabnas/json`](https://npmjs.com/package/@tabnas/json) grammar as the host. `Path` populates `r.k.path` for every value; the `capture` plugin tags each value with that path (scalars become `<value:path>`, the array elements are tagged individually):
+
+```js
+const { Tabnas } = require('@tabnas/parser')
+const { json } = require('@tabnas/json')
+const { Path } = require('@tabnas/path')
+
+// Tag every value with the path Path tracks in r.k.path.
+const capture = (tn) => {
+  tn.rule('val', (rs) =>
+    rs.ac(false, (r) => {
+      if (null === r.node || 'object' !== typeof r.node) {
+        r.node = `<${r.node}:${r.k.path}>`
+      } else if (!Array.isArray(r.node)) {
+        r.node.$ = `<${r.k.path}>`
+      }
+    }),
+  )
+}
+
+const jp = new Tabnas({ plugins: [json] }).use(Path).use(capture)
+const out = jp.parse('{"a":[1,2]}')
+
+out.a       // => ['<1:a,0>', '<2:a,1>']
+out.a[0]    // => '<1:a,0>'
+```
+
+Each scalar carries its full path: element `1` lives at `a,0` (key `a`, index `0`) and `2` at `a,1`.
+
 ### How to read the path inside your own rule action
 
 `Path` runs its hooks first (`bo`/`ao`). Later plugins can read `r.k.path` inside `bc`/`ac` actions or from within alt actions:
