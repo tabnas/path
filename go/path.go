@@ -1,6 +1,6 @@
 /* Copyright (c) 2022-2026 Richard Rodger and other contributors, MIT License */
 
-package path
+package tabnaspath
 
 import (
 	tabnas "github.com/tabnas/parser/go"

@@ -1,4 +1,4 @@
-package path
+package tabnaspath
 
 import (
 	"testing"

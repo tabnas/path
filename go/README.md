@@ -29,12 +29,12 @@ go get github.com/tabnas/path/go
 ```go
 import (
     tabnas "github.com/tabnas/parser/go"
-    path "github.com/tabnas/path/go"
+    tabnaspath "github.com/tabnas/path/go"
 )
 
 j := tabnas.Make()
 installGrammar(j)          // your grammar: defines val/map/pair/list/elem
-_ = j.Use(path.Path, nil)  // install Path after the grammar
+_ = j.Use(tabnaspath.Path, nil)  // install Path after the grammar
 ```
 
 A complete, minimal grammar fixture lives in `path_test.go` (`installGrammar`).
@@ -109,13 +109,13 @@ The `base` slice is shallow-copied, so the caller's slice is not mutated.
 ## Reference
 
 ```go
-import path "github.com/tabnas/path/go"
+import tabnaspath "github.com/tabnas/path/go"
 ```
 
 ### Exported identifiers
 
-- `path.Path(j *tabnas.Tabnas, opts map[string]any) error` — plugin function. Register with `j.Use(path.Path, nil)` *after* the grammar that defines the hooked rules.
-- `path.PathOptions` — empty struct reserved for future options.
+- `tabnaspath.Path(j *tabnas.Tabnas, opts map[string]any) error` — plugin function. Register with `j.Use(tabnaspath.Path, nil)` *after* the grammar that defines the hooked rules.
+- `tabnaspath.PathOptions` — empty struct reserved for future options.
 
 ### Hooked rules
 
