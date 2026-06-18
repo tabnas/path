@@ -1,6 +1,6 @@
 {
   "name": "@tabnas/path",
-  "version": "2.1.0",
+  "version": "0.2.0",
   "description": "This plugin allows the Tabnas parser to determine the path to values.",
   "main": "dist/path.js",
   "type": "commonjs",
@@ -43,7 +43,7 @@
     "typescript": "6.0.3"
   },
   "peerDependencies": {
-    "@tabnas/parser": ">=2"
+    "@tabnas/parser": "^0.2.0"
   },
   "engines": {
     "node": ">=24"
