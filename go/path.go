@@ -35,7 +35,7 @@ func Path(j *tabnas.Tabnas, opts map[string]any) error {
 				if base == nil {
 					base = []any{}
 				}
-				r.K["path"] = base
+				r.EnsureK()["path"] = base
 			}
 		}),
 
@@ -50,13 +50,14 @@ func Path(j *tabnas.Tabnas, opts map[string]any) error {
 				childPath := make([]any, len(parentPath)+1)
 				copy(childPath, parentPath)
 				childPath[len(parentPath)] = key
-				r.Child.K["path"] = childPath
-				r.Child.K["key"] = key
+				ck := r.Child.EnsureK()
+				ck["path"] = childPath
+				ck["key"] = key
 			}
 		}),
 
 		"@list-bo": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
-			r.K["index"] = -1
+			r.EnsureK()["index"] = -1
 		}),
 
 		"@elem-ao": tabnas.StateAction(func(r *tabnas.Rule, ctx *tabnas.Context) {
@@ -65,14 +66,15 @@ func Path(j *tabnas.Tabnas, opts map[string]any) error {
 				if v, ok := r.K["index"].(int); ok {
 					idx = v + 1
 				}
-				r.K["index"] = idx
+				r.EnsureK()["index"] = idx
 				parentPath := toPathSlice(r.K["path"])
 				childPath := make([]any, len(parentPath)+1)
 				copy(childPath, parentPath)
 				childPath[len(parentPath)] = idx
-				r.Child.K["path"] = childPath
-				r.Child.K["key"] = idx
-				r.Child.K["index"] = idx
+				ck := r.Child.EnsureK()
+				ck["path"] = childPath
+				ck["key"] = idx
+				ck["index"] = idx
 			}
 		}),
 	}
