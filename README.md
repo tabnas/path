@@ -1,5 +1,12 @@
 # @tabnas/path
 
+<!-- tabnas-badges -->
+[![npm](https://tabnas.github.io/status/badges/path-npm.svg)](https://www.npmjs.com/package/@tabnas/path)
+[![CI](https://github.com/tabnas/path/actions/workflows/ci.yml/badge.svg)](https://github.com/tabnas/path/actions/workflows/ci.yml)
+[![go](https://tabnas.github.io/status/badges/path-go.svg)](https://pkg.go.dev/github.com/tabnas/path/go)
+[![tabnas standard](https://tabnas.github.io/status/badges/path-standard.svg)](https://tabnas.github.io/status/)
+<!-- /tabnas-badges -->
+
 A [Tabnas](https://github.com/tabnas/parser) parser plugin that tracks the
 **property path** to each value as it is parsed — the chain of map keys and
 array indices leading from the root to that value.
