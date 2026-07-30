@@ -73,8 +73,8 @@ export const Grammar: Plugin = (tn: Tabnas) => {
 export const capture: Plugin = (tn: Tabnas) => {
   tn.rule('val', (rs: any) =>
     rs.ac(false, (r: Rule) => {
+      // r.k.path is a shared, pooled array — the template reads it now.
       if (null === r.node || 'object' !== typeof r.node) {
-        // String coercion reads path immediately — safe.
         r.node = `<${r.node}:${r.k.path}>`
       } else if (!Array.isArray(r.node)) {
         r.node.$ = `<${r.k.path}>`

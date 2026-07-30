@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert'
 
-import { Tabnas, Plugin, Rule } from '@tabnas/parser'
+import { Tabnas, Rule } from '@tabnas/parser'
 
 import { Path } from '../dist/path'
 import { Grammar, capture } from './fixture'

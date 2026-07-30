@@ -36,9 +36,11 @@ There are two implementations that must behave identically — TypeScript
 | [`go/stress_test.go`](go/stress_test.go) | No-panic / deep-nesting tests and `FuzzPathPlugin` — the plugin must never panic on malformed input. |
 | [`ts/AGENTS.md`](ts/AGENTS.md), [`go/AGENTS.md`](go/AGENTS.md) | Per-language scoped notes. |
 
-There is **no shared `.tsv` fixture directory and no CLI bin** here: each
-runtime brings its own small grammar fixture in-process, and the parity
-contract is the set of mirrored unit tests (see below).
+There is **no CLI bin** here, and no grammar package: each runtime brings
+its own small grammar fixture in-process. The parity contract is the shared
+`test/spec/*.tsv` fixtures both runtimes run against that grammar (see
+[`test/AGENTS.md`](test/AGENTS.md)), plus the mirrored unit tests for what a
+fixture cannot express.
 
 ## The tabnas engine dependency
 

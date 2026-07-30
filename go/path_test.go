@@ -339,6 +339,10 @@ func fmtVal(v any) string {
 		return fmt.Sprintf("%g", val)
 	case bool:
 		return fmt.Sprintf("%t", val)
+	case nil:
+		// TS interpolates a null value as the text "null"; Go's %v would
+		// render it "<nil>", which no shared fixture could satisfy.
+		return "null"
 	default:
 		return fmt.Sprintf("%v", v)
 	}
