@@ -1,0 +1,3 @@
+input	expected	opts
+{a:1}	{"a":"<1:x,y,a>","$":"<x,y>"}	{"path":{"base":["x","y"]}}
+{a:{b:1}}	{"a":{"b":"<1:x,a,b>","$":"<x,a>"},"$":"<x>"}	{"path":{"base":["x"]}}
