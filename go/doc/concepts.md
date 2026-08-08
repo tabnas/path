@@ -168,5 +168,7 @@ deliberate differences:
   `tn.use(Path)`. The Go package name is `tabnaspath`; the TS package is
   `@tabnas/path`.
 
-- **`Version` constant.** The Go package exports a `Version` constant
-  (`"0.2.0"`); the TS package's version lives in `package.json` (`2.1.0`).
+- **`VERSION` constant.** The Go package exports a `VERSION` constant
+  (in `go/path.go`); the TS package exports the same name from
+  `ts/src/path.ts`. Both must equal `ts/package.json` `"version"` — the
+  version tests in each runtime fail the build if they drift.

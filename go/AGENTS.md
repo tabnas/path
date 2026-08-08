@@ -35,7 +35,9 @@ type `Tabnas`). It is the only required dependency. Do not depend on the legacy
   so it does not change what the host grammar parses — it only annotates `Rule.K`.
 - Path segments are `any`: map keys are `string`, array indices are `int`
   (deliberately `int`, not `float64`, so a type switch round-trips cleanly).
-- `const Version` is bumped by the `publish-go` Makefile target.
+- `const VERSION` is bumped by the release orchestrator (`admin/publish.sh`) and
+  by the `publish-go` Makefile target. `version_test.go` asserts it equals
+  `ts/package.json` `"version"`, so a bump that misses one side fails CI.
 
 ## Debugging
 
