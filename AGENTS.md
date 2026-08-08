@@ -28,12 +28,18 @@ There are two implementations that must behave identically — TypeScript
 
 | Path | What it is |
 |---|---|
-| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (v2.1.0). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
-| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const Version` `0.2.0`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
-| [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS suite + the local grammar fixture (`Grammar`) and a `capture` plugin that annotates nodes with their path. |
+| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (v0.2.2). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
+| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const Version` `0.2.2`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
+| [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
+| [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
+| [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
+| [`ts/test/stress.test.ts`](ts/test/stress.test.ts) | TS counterpart of `go/stress_test.go`: malformed input must raise a controlled `TabnasError`, and deep nesting must still yield a full path. |
+| [`ts/test/perf.test.ts`](ts/test/perf.test.ts) | Asserts reusing a parser instance beats rebuilding one per call. |
 | [`ts/test/doc-examples.test.ts`](ts/test/doc-examples.test.ts) | Extracts fenced `js` blocks with `// =>` assertions from the READMEs/docs and runs them. |
 | [`go/path_test.go`](go/path_test.go) | Go suite + the local grammar fixture (`installGrammar`), mirroring the TS one. |
+| [`go/parity_test.go`](go/parity_test.go) | `TestSpec` — the Go runner for the shared `test/spec/*.tsv` fixtures. |
 | [`go/stress_test.go`](go/stress_test.go) | No-panic / deep-nesting tests and `FuzzPathPlugin` — the plugin must never panic on malformed input. |
+| [`go/perf_test.go`](go/perf_test.go) | Go counterpart of `perf.test.ts`. |
 | [`ts/AGENTS.md`](ts/AGENTS.md), [`go/AGENTS.md`](go/AGENTS.md) | Per-language scoped notes. |
 
 There is **no CLI bin** here, and no grammar package: each runtime brings
@@ -48,12 +54,15 @@ Both runtimes depend on the unpublished `@tabnas` siblings via a
 **sibling checkout** (the standard tabnas dev model until the packages
 publish tagged releases):
 
-- TypeScript: `@tabnas/parser` is a `peerDependency` (`">=2"`) in
-  `ts/package.json` and mirrored as a `file:../../parser/ts` devDependency
-  for local builds (npm >=7 / Node >=24 auto-installs peers;
-  `engines.node` is `">=24"`). It is the plugin's **only production
-  dependency**. `@tabnas/debug` and `@tabnas/railroad` are **dev-only**
-  `file:` devDependencies — but note this repo has no grammar diagram, so
+- TypeScript: `@tabnas/parser` is a `peerDependency` (`">=0"`) in
+  `ts/package.json` and mirrored as a `"*"` devDependency for local builds
+  (npm >=7 / Node >=24 auto-installs peers; `engines.node` is `">=24"`).
+  Locally those `@tabnas/*` devDependencies resolve through
+  `ts/node_modules/@tabnas/*` **symlinks** into the sibling checkouts,
+  wired by `admin/scripts/link.sh` — do not `npm ci` or delete
+  `node_modules`, which would break them. `@tabnas/parser` is the plugin's
+  **only production dependency**. `@tabnas/debug` and `@tabnas/railroad`
+  are **dev-only** — but note this repo has no grammar diagram, so
   railroad is effectively unused here and debug is only for ad-hoc manual
   debugging (see below); neither is exercised by the test suite.
 - Go: `go/go.mod` requires `github.com/tabnas/parser/go` at a pinned
@@ -81,7 +90,7 @@ change:
    cover the same ground. Both define a deliberately-minimal local grammar
    (bare-key brace maps and bracket lists) that declares the hooked rules
    and depends on nothing but the Tabnas parser. Keep `Grammar`
-   (`ts/test/path.test.ts`) and `installGrammar` (`go/path_test.go`) in
+   (`ts/test/fixture.ts`) and `installGrammar` (`go/path_test.go`) in
    sync.
 4. Run both suites and confirm green.
 
@@ -96,6 +105,9 @@ runtimes:
 - **TypeScript pools and mutates in place.** `path.ts` keeps a
   preallocated `pathPool` of reusable arrays keyed by depth
   (`MAX_PATH_DEPTH = 64`) and rewrites them as the parser descends.
+  `MAX_PATH_DEPTH` sizes the *preallocation* only — it is **not** a
+  ceiling: deeper levels extend the pool lazily, so TS tracks arbitrarily
+  deep paths just as Go does (`stress.test.ts` pins depth 1000).
   `r.k.path` is therefore a **shared, mutable array** — two values at the
   same depth see the *same* live array instance. Client code that needs to
   retain a path beyond the current callback **must copy it** (`r.k.path.slice()`).
@@ -103,8 +115,8 @@ runtimes:
   depth-1 siblings share one live instance — keep that contract.
 - **Go allocates a fresh `[]any` per level** (`make` + `copy` in the
   `@pair-ao` / `@elem-ao` refs), so Go callers do **not** have to copy
-  before retaining. There is no pool and no depth limit, so deep nesting
-  is bounded only by memory (`stress_test.go` exercises depth 1000).
+  before retaining. There is no pool, so deep nesting is bounded only by
+  memory (`stress_test.go` exercises depth 1000).
 
 Path **segments** are `any`: map keys are strings, array indices are
 numbers (deliberately `int` in Go, not `float64`, so a type switch
@@ -114,7 +126,10 @@ round-trips cleanly). The observable path values — e.g. `["a","b"]` for
 ## The plugin contract
 
 - It writes only `r.k.path` / `r.k.key` / `r.k.index` (TS) and the
-  equivalent `Rule.K` entries (Go). **Reading** the path is the job of a
+  equivalent `Rule.K` entries (Go) — plus, in TS only, the internal
+  `r.k.pathDepth` bookkeeping counter that indexes the pool (Go derives
+  the same number from `len(path)`). `pathDepth` is an implementation
+  detail, not part of the consumer contract. **Reading** the path is the job of a
   separate rule action — the tests' `capture` / `addPathCapture` plugins
   show the pattern (annotate maps with `$`, render scalars as
   `<value:path>`).
@@ -173,16 +188,21 @@ go vet ./...
 
 ## CI
 
-`.github/workflows/build.yml` has two jobs, neither publishing to npm:
+CI is `.github/workflows/ci.yml`, a thin **caller** of the org-standard
+reusable workflow `tabnas/.github/.github/workflows/polyglot-ci.yml@main`.
+It replaced the old per-repo `build.yml`; session credentials cannot write
+`.github/workflows/*` (see admin `DECISIONS.md` ADR-8), so it is promoted
+by a maintainer via `tabnas/admin rollout/apply-ci-folders.sh`. The caller
+passes only two inputs — the sibling closure to check out and the build
+order:
 
-- **build** (Ubuntu/Windows/macOS, Node 24): sets
-  `git config --global core.autocrlf false` (the "Use LF line endings"
-  step), git-clones the tabnas closure (`parser debug json abnf railroad`)
-  as siblings, `npm i && npm run build --if-present` over
-  `parser debug json path abnf railroad` in topo order, then `npm test`
-  in `path/ts`.
-- **build-go** (Ubuntu/macOS, Go 1.24): clones the same siblings, then
-  mirrors `admin/scripts/link.sh` — creates `vendor/` symlinks for any
-  `../vendor/` replaces and runs `go work init` + `go work use` over every
-  non-vendor-replaced module — before `go build ./...` and `go test -v ./...`
-  in `path/go`.
+```yaml
+deps:        "parser debug json abnf railroad"
+build-order: "parser debug json path abnf railroad"
+```
+
+The reusable workflow owns the matrix (OS/Node/Go versions), the LF
+line-ending config, the `go.work` wiring that mirrors
+`admin/scripts/link.sh`, and running both `npm test` in `path/ts` and
+`go test ./...` in `path/go`. Nothing here publishes to npm;
+`.github/workflows/release.yml` handles releases.
