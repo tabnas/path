@@ -40,11 +40,15 @@ clean-go:
 	cd go && go clean
 
 # Publish the Go module: make publish-go V=x.y.z
-# Injects V into the Go `Version` const, commits, tags go/vX.Y.Z, and
+# Injects V into the Go `VERSION` const, commits, tags go/vX.Y.Z, and
 # (when gh is available) creates a GitHub release.
+#
+# NOTE: the sed pattern is case-sensitive and anchored. If it stops matching
+# the const, sed exits 0 having changed nothing and the tag ships a stale
+# version — the exact drift version_test.go now catches. Keep the two in step.
 publish-go: test-go
 	@test -n "$(V)" || (echo "Usage: make publish-go V=x.y.z" && exit 1)
-	sed -i.bak 's/^const Version = ".*"/const Version = "$(V)"/' go/path.go
+	sed -i.bak 's/^const VERSION = ".*"/const VERSION = "$(V)"/' go/path.go
 	rm -f go/path.go.bak
 	git add go/path.go
 	git commit -m "go: v$(V)"

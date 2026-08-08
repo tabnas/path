@@ -36,13 +36,14 @@ the error (if any) from declaring its rules on the grammar.
 
 An empty struct. Reserved for future options; the plugin accepts none today.
 
-### `const Version`
+### `const VERSION`
 
 ```go
-const Version = "0.2.0"
+const VERSION = "x.y.z"
 ```
 
-The package version string.
+The package version string. It always equals `ts/package.json` `"version"`;
+`TestVersionMatchesPackageJSON` fails the build if the two drift.
 
 
 ## Hooked rules

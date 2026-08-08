@@ -28,8 +28,8 @@ There are two implementations that must behave identically — TypeScript
 
 | Path | What it is |
 |---|---|
-| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (version in `package.json`). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
-| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const Version` in `path.go`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
+| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (version in `package.json`, mirrored by the exported `VERSION` in `src/path.ts`). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
+| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const VERSION` in `path.go`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
 | [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
 | [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
 | [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
@@ -165,10 +165,15 @@ dependencies.
 The repo-root [`Makefile`](Makefile) (adapted from voxgig/util) wraps both
 halves: `make build|test|clean` run the TS and Go sides,
 `make publish-ts` publishes the TS package at its `package.json` version,
-and `make publish-go V=x.y.z` injects `V` into the `const Version` in
+and `make publish-go V=x.y.z` injects `V` into the `const VERSION` in
 `go/path.go`, commits, and tags `go/vX.Y.Z` (`make tags-go` lists those
 tags; `make reset` does a clean rebuild + test of both). There is also a
 thin `ts/Makefile` with the same targets driven from `ts/`.
+
+`VERSION` is exported by both runtimes (`go/path.go`, `ts/src/path.ts`) and
+must always equal `ts/package.json` `"version"`. `go/version_test.go` and
+`ts/test/version.test.ts` assert exactly that, so a release that bumps one
+side and forgets the other fails CI instead of shipping a stale constant.
 
 TypeScript (from `ts/`):
 

@@ -103,6 +103,11 @@ const Path: Plugin = (tabnas: Tabnas, _options: PathOptions) => {
 
 Path.defaults = {} as PathOptions
 
-export { Path }
+// VERSION is this package's version. It MUST equal package.json "version":
+// the release orchestrator rewrites both, and the version test fails the
+// build if they drift. Mirrors `const VERSION` in go/path.go.
+const VERSION = '0.2.4'
+
+export { Path, VERSION }
 
 export type { PathOptions }

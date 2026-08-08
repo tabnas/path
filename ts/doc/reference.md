@@ -52,6 +52,18 @@ type PathOptions = {}
 An empty object type. Reserved for future options; the plugin accepts none
 today.
 
+### `VERSION: string`
+
+This package's version string.
+
+```js
+const { VERSION } = require('@tabnas/path')
+```
+
+It always equals `package.json` `"version"` — `test/version.test.ts` asserts
+that, so a release that bumps one and forgets the other fails CI. The Go port
+exports the same constant (`const VERSION` in `go/path.go`).
+
 
 ## Hooked rules
 
