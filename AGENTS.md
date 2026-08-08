@@ -28,8 +28,8 @@ There are two implementations that must behave identically — TypeScript
 
 | Path | What it is |
 |---|---|
-| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (v0.2.2). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
-| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const Version` `0.2.2`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
+| [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (version in `package.json`). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
+| [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const Version` in `path.go`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
 | [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
 | [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
 | [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
