@@ -14,7 +14,7 @@ Blank lines are skipped, and so are comment lines — a line starting with
 | Column | Meaning |
 |---|---|
 | `input` | Source for the test grammar (see ts/test/fixture.ts and go/path_test.go). Escapes `\n` `\r` `\t` `\\` are decoded. |
-| `expected` | A JSON value (the parse result), or `ERROR` / `ERROR:<substring>` for inputs that must fail. |
+| `expected` | A JSON value (the parse result), or `ERROR` / `ERROR:<code>` for inputs that must fail. The code is compared **exactly** — it is the error's code, not a substring of its message. |
 | `opts` | Optional JSON object of **parse-time meta** — path is configured per parse (e.g. `{"path":{"base":["x","y"]}}`), not by plugin options. |
 
 `expected` and `opts` are **not** escape-decoded — they are raw JSON, so
@@ -35,12 +35,22 @@ comparison.
 
 ## Who runs what
 
-- TypeScript: `ts/test/parity.test.ts` — reads `../../test/spec` at runtime
-  from `dist-test/`, one `describe` per file.
-- Go: `go/parity_test.go` — `TestSpec` globs `../test/spec/*.tsv`.
+- TypeScript: `ts/test/parity.test.ts` — `makeRunner(...).dir(...)`.
+- Go: `go/parity_test.go` — `support.Runner{...}.Dir(t, dir)`.
+
+Both are a dozen lines holding only what is specific to path: the grammar
+and capture plugin the fixtures parse against, and the row's parse meta.
+Everything else — finding `test/spec`, reading the file, decoding escapes,
+the `ERROR:` contract, the comparison, the `<file>:<line>` in a failure
+message — comes from
+[`@tabnas/support`](https://github.com/tabnas/support) and its Go half, so
+the two loaders cannot drift from each other either.
 
 Both discover files by directory listing: adding a `.tsv` here runs it in
-both runtimes without touching either runner.
+both runtimes without touching either runner. An empty fixture, and a spec
+directory with no fixtures in it, both **fail** — a runner that reports
+green having run nothing is indistinguishable from coverage that was never
+there.
 
 ## Rules
 
