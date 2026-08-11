@@ -13,5 +13,5 @@ jobs:
   ci:
     uses: tabnas/.github/.github/workflows/polyglot-ci.yml@main
     with:
-      deps: "parser"
-      build-order: "parser path"
+      deps: "parser json"
+      build-order: "parser json path"
