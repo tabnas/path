@@ -1,0 +1,12 @@
+{
+  "$schema": "https://tabnas.dev/schema/plugin.schema.json",
+  "name": "@tabnas/path",
+  "go": "github.com/tabnas/path/go",
+  "description": "Value-path resolution for the tabnas engine.",
+  "engine": "@tabnas/parser",
+  "specDir": "test/spec",
+  "errorCodes": [],
+  "docs": "https://tabnas.dev/docs/packages",
+  "repository": "https://github.com/tabnas/path",
+  "versionSource": "ts/package.json"
+}
