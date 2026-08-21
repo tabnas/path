@@ -11,6 +11,8 @@ A [Tabnas](https://github.com/tabnas/parser) parser plugin that tracks the
 **property path** to each value as it is parsed — the chain of map keys and
 array indices leading from the root to that value.
 
+Docs, guides, the error reference and the playground: **[tabnas.dev](https://tabnas.dev)**.
+
 The plugin records the path into the parser's per-rule key bag, where your
 own rule actions can read it. It computes nothing visible on its own; you
 read the path and use it.
