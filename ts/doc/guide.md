@@ -139,7 +139,7 @@ numeric index.
 ## Use the last path segment directly
 
 The plugin also sets `r.k.key` on each child to the final segment of its
-path — the property name for a map child, or the index for an array element.
+path: the property name for a map child, or the index for an array element.
 This saves you indexing into `r.k.path`.
 
 ```js
@@ -167,7 +167,7 @@ keys  // => ['a', 0]
 
 ## Plug it onto your own grammar
 
-`Path` does not depend on `@tabnas/json` — it depends on the *rule names*
+`Path` does not depend on `@tabnas/json`; it depends on the *rule names*
 `val` / `map` / `pair` / `list` / `elem`. If you write your own grammar with
 those rules, install it first and `Path` will hook onto it. A complete,
 minimal grammar fixture lives in `ts/test/path.test.ts` (`Grammar`); it

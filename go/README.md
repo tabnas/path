@@ -17,7 +17,7 @@ The TypeScript version is canonical; this package tracks it.
 go get github.com/tabnas/path/go
 ```
 
-The Tabnas engine ships no grammar of its own — you bring a grammar that
+The Tabnas engine ships no grammar of its own: you bring a grammar that
 defines the `val` / `map` / `pair` / `list` / `elem` rules. Install the
 grammar first, then `Path` on top. A minimal grammar fixture
 (`installGrammar`) lives in `path_test.go`.
@@ -66,13 +66,13 @@ func main() {
 
 The docs follow the [Diátaxis](https://diataxis.fr) four-quadrant structure:
 
-- [Tutorial](doc/tutorial.md) — zero to a working path-tracking parser, step
+- [Tutorial](doc/tutorial.md). Zero to a working path-tracking parser, step
   by step.
-- [How-to guides](doc/guide.md) — recipes: read the path, classify segments,
+- [How-to guides](doc/guide.md). Recipes: read the path, classify segments,
   use `r.K["key"]`, seed a base path.
-- [Reference](doc/reference.md) — exported identifiers, the `Rule.K` keys,
+- [Reference](doc/reference.md). Exported identifiers, the `Rule.K` keys,
   the function refs, meta input.
-- [Concepts](doc/concepts.md) — how it works, the engine relationship, and a
+- [Concepts](doc/concepts.md). How it works, the engine relationship, and a
   "Differences from the TS version" section.
 
 The canonical TypeScript implementation lives in [`../ts/`](../ts/) with its

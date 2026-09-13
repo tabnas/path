@@ -19,7 +19,7 @@ see the path (keys and indices) leading to the current value.
 npm install @tabnas/parser @tabnas/json @tabnas/path
 ```
 
-The Tabnas engine ships no grammar of its own — you bring a grammar plugin
+The Tabnas engine ships no grammar of its own: you bring a grammar plugin
 that defines the `val` / `map` / `pair` / `list` / `elem` rules (here,
 `@tabnas/json`). Install the grammar first, then `Path` on top.
 
@@ -60,13 +60,13 @@ Each scalar carries its full path: `1` lives at `a, 0` and `2` at `a, 1`.
 
 The docs follow the [Diátaxis](https://diataxis.fr) four-quadrant structure:
 
-- [Tutorial](doc/tutorial.md) — zero to a working path-tracking parser, step
+- [Tutorial](doc/tutorial.md). Zero to a working path-tracking parser, step
   by step.
-- [How-to guides](doc/guide.md) — recipes: read the path, keep a copy, seed
+- [How-to guides](doc/guide.md). Recipes: read the path, keep a copy, seed
   a base path, classify segments.
-- [Reference](doc/reference.md) — exports, options, the `Rule.k` keys, the
+- [Reference](doc/reference.md). Exports, options, the `Rule.k` keys, the
   function refs, meta input.
-- [Concepts](doc/concepts.md) — how it works, the engine relationship, the
+- [Concepts](doc/concepts.md). How it works, the engine relationship, the
   array-pool / mutability trade-off.
 
 The Go port lives in [`../go/`](../go/) with its own

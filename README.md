@@ -8,7 +8,7 @@
 <!-- /tabnas-badges -->
 
 A [Tabnas](https://github.com/tabnas/parser) parser plugin that tracks the
-**property path** to each value as it is parsed — the chain of map keys and
+**property path** to each value as it is parsed: the chain of map keys and
 array indices leading from the root to that value.
 
 Docs, guides, the error reference and the playground: **[tabnas.dev](https://tabnas.dev)**.
@@ -60,17 +60,17 @@ The docs follow the [Diátaxis](https://diataxis.fr) four-quadrant structure.
 
 **TypeScript / JavaScript** ([`ts/`](ts/)):
 
-- [Tutorial](ts/doc/tutorial.md) — zero to a working path-tracking parser.
-- [How-to guides](ts/doc/guide.md) — recipes for common tasks.
-- [Reference](ts/doc/reference.md) — the exact API surface.
-- [Concepts](ts/doc/concepts.md) — how it works and why.
+- [Tutorial](ts/doc/tutorial.md). Zero to a working path-tracking parser.
+- [How-to guides](ts/doc/guide.md). Recipes for common tasks.
+- [Reference](ts/doc/reference.md). The exact API surface.
+- [Concepts](ts/doc/concepts.md). How it works and why.
 
 **Go** ([`go/`](go/)):
 
 - [Tutorial](go/doc/tutorial.md)
 - [How-to guides](go/doc/guide.md)
 - [Reference](go/doc/reference.md)
-- [Concepts](go/doc/concepts.md) — including differences from the TS version.
+- [Concepts](go/doc/concepts.md). Including differences from the TS version.
 
 
 ## License

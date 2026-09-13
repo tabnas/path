@@ -60,7 +60,7 @@ This package's version string.
 const { VERSION } = require('@tabnas/path')
 ```
 
-It always equals `package.json` `"version"` — `test/version.test.ts` asserts
+It always equals `package.json` `"version"`; `test/version.test.ts` asserts
 that, so a release that bumps one and forgets the other fails CI. The Go port
 exports the same constant (`const VERSION` in `go/path.go`).
 
@@ -109,7 +109,7 @@ At the root (`r.d === 0`), `path` is `[]` unless a base is supplied through
 meta (see below). Path segments are `string` for map keys and `number` for
 array indices.
 
-### Mutability — important
+### Mutability: important
 
 `r.k.path` is a **shared, mutable** array. The plugin keeps a pool of
 arrays, one per depth level, and rewrites them in place as it walks the
@@ -132,7 +132,7 @@ Seed the root path by passing a `base` array through the parse meta:
 parser.parse(src, { path: { base: ['x', 'y'] } })
 ```
 
-- `meta.path.base: (string | number)[]` — the root path. The array is
+- `meta.path.base: (string | number)[]`. The root path. The array is
   shallow-copied into the pool, so the caller's array is not mutated.
 
 If `base` is absent or empty, the root path is `[]`.
