@@ -1,7 +1,7 @@
 # Tutorial: tracking the path to a value
 
 This tutorial takes you from nothing to a working parser that knows the
-property path of every value it parses. It is a single happy path — follow
+property path of every value it parses. It is a single happy path: follow
 the steps in order.
 
 By the end you will have a parser that, given `{"a":[1,2]}`, can tell you
@@ -20,7 +20,7 @@ into the parser's per-rule key bag, `r.k.path`, where your own rule actions
 can read it.
 
 
-## Step 1 — Install
+## Step 1: Install
 
 You need the parser engine, a grammar, and the plugin. The Tabnas engine
 ships no grammar of its own, so we use the `@tabnas/json` grammar as the
@@ -32,7 +32,7 @@ npm install @tabnas/parser @tabnas/json @tabnas/path
 ```
 
 
-## Step 2 — Build a parser
+## Step 2: Build a parser
 
 Install the grammar first, then the plugin on top. `Path` wires its hooks
 onto the grammar's rules, so the rules must already exist when it runs.
@@ -52,7 +52,7 @@ So far the result is identical to parsing without the plugin. `Path` only
 you read it.
 
 
-## Step 3 — Read the path
+## Step 3: Read the path
 
 The path lives in `r.k.path` during the parse. Add a small second plugin
 that reads it inside a `val` rule action and tags each value with its path.
@@ -85,14 +85,14 @@ out.a[0]  // => '<1:a,0>'
 
 Read the tags:
 
-- `<1:a,0>` — the value `1` is reached by key `a`, then index `0`.
-- `<2:a,1>` — the value `2` is reached by key `a`, then index `1`.
+- `<1:a,0>`. The value `1` is reached by key `a`, then index `0`.
+- `<2:a,1>`. The value `2` is reached by key `a`, then index `1`.
 
 When an array is stringified, the path `['a', 0]` renders as `a,0`. Map keys
 appear as their string names; array indices appear as numbers.
 
 
-## Step 4 — Go deeper
+## Step 4: Go deeper
 
 Nesting works the same way at any depth. Reuse the same `parser`:
 
@@ -134,10 +134,10 @@ out.a.c       // => ['<2:a,c,0>', '<3:a,c,1>']
 - `Path` records the path of every value into `r.k.path`.
 - The root path is empty (`[]`, which stringifies to `<>`).
 - Map keys add a string segment; array elements add a numeric index.
-- You read the path in your own rule action — the plugin never returns it.
+- You read the path in your own rule action; the plugin never returns it.
 
 Next:
 
-- [How-to guides](./guide.md) — focused recipes for common tasks.
-- [Reference](./reference.md) — the exact API surface.
-- [Concepts](./concepts.md) — how and why it works.
+- [How-to guides](./guide.md). Focused recipes for common tasks.
+- [Reference](./reference.md). The exact API surface.
+- [Concepts](./concepts.md). How and why it works.

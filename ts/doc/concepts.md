@@ -24,14 +24,14 @@ available to your code.
 
 Tabnas is a bare parsing *engine*. It ships **no grammar of its own**. A
 grammar is supplied by a plugin (for example `@tabnas/json`), which defines
-rules — the units of the parse. The conventional structural rule set uses
+rules, the units of the parse. The conventional structural rule set uses
 five rule names:
 
-- `val` — a value of any kind,
-- `map` — a brace-delimited map,
-- `pair` — a single key/value pair inside a map,
-- `list` — a bracket-delimited list,
-- `elem` — a single element inside a list.
+- `val`. A value of any kind,
+- `map`. A brace-delimited map,
+- `pair`. A single key/value pair inside a map,
+- `list`. A bracket-delimited list,
+- `elem`. A single element inside a list.
 
 `Path` adds *behaviour* to whatever grammar provides those rules. It does
 not parse anything itself; it hooks the five rule names and records the path
@@ -120,7 +120,7 @@ behaviour in.
 
 The pool is preallocated up to a fixed maximum depth (`MAX_PATH_DEPTH`).
 Deeper paths fall back to a freshly allocated array of the required length,
-so depth is not hard-capped — only the fast preallocated range is.
+so depth is not hard-capped; only the fast preallocated range is.
 
 
 ## The meta base path
@@ -130,8 +130,8 @@ already nested under a known prefix. The plugin copies the base into the
 root path, so a value at key `a` parsed with `base: ['x', 'y']` reports path
 `['x', 'y', 'a']`.
 
-This is useful when composing parsers — parsing an embedded fragment whose
-true location is known from the surrounding document — or when reporting
+This is useful when composing parsers (parsing an embedded fragment whose
+true location is known from the surrounding document) or when reporting
 errors in terms of that surrounding document rather than the fragment alone.
 The base is shallow-copied, so the caller's array is never mutated.
 
@@ -139,8 +139,8 @@ The base is shallow-copied, so the caller's array is never mutated.
 ## Why a plugin at all
 
 A grammar does not record paths because the default rules never use them.
-But many extensions — validation, error reporting, templating, change
-tracking — do. Making path tracking a plugin keeps the cost out of the core:
+But many extensions (validation, error reporting, templating, change
+tracking) do. Making path tracking a plugin keeps the cost out of the core:
 it is paid only when loaded, and the grammar stays focused on parsing. It
 also composes cleanly, since later plugins simply read `r.k.path` from the
 inherited key bag.

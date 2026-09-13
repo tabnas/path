@@ -71,7 +71,7 @@ without further conversion.
 ## Use the last path segment directly
 
 The plugin also sets `r.K["key"]` on each child to the final segment of its
-path — the property name (`string`) for a map child, or the index (`int`)
+path: the property name (`string`) for a map child, or the index (`int`)
 for an array element. This saves you indexing into `r.K["path"]`.
 
 ```go
@@ -106,7 +106,7 @@ The `base` slice is shallow-copied, so the caller's slice is not mutated.
 
 ## Plug it onto your own grammar
 
-`Path` does not depend on any particular grammar — it depends on the *rule
+`Path` does not depend on any particular grammar; it depends on the *rule
 names* `val` / `map` / `pair` / `list` / `elem`. Define those rules in your
 own grammar, install it first, and `Path` will hook onto it:
 
@@ -124,6 +124,6 @@ never fires.
 
 Unlike the TypeScript version, the Go port allocates a fresh `[]any` for
 each child's path (see [concepts](./concepts.md)). You can retain the slice
-returned by `r.K["path"]` directly without copying — there is no shared
+returned by `r.K["path"]` directly without copying; there is no shared
 pooled array to defend against. (Copying anyway is harmless if you want to
 match the TS code's habits.)

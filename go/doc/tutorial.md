@@ -1,7 +1,7 @@
 # Tutorial: tracking the path to a value (Go)
 
 This tutorial takes you from nothing to a working parser that knows the
-property path of every value it parses. It is a single happy path — follow
+property path of every value it parses. It is a single happy path: follow
 the steps in order.
 
 This is the Go port of `@tabnas/path`. The TypeScript version is canonical;
@@ -21,7 +21,7 @@ into the parser's per-rule key bag, `r.K["path"]`, where your own rule
 actions can read it.
 
 
-## Step 1 — Install
+## Step 1: Install
 
 ```sh
 go get github.com/tabnas/path/go
@@ -37,11 +37,11 @@ import (
 ```
 
 
-## Step 2 — Build a parser
+## Step 2: Build a parser
 
 The Tabnas engine ships no grammar of its own, so you bring one that defines
 the `val` / `map` / `pair` / `list` / `elem` rules. Install the grammar
-first, then the plugin on top — `Path` wires its hooks onto the grammar's
+first, then the plugin on top: `Path` wires its hooks onto the grammar's
 rules, so the rules must already exist when it runs.
 
 A complete, minimal grammar fixture (`installGrammar`) lives in
@@ -67,7 +67,7 @@ So far the result is identical to parsing without the plugin. `Path` only
 you read it.
 
 
-## Step 3 — Read the path
+## Step 3: Read the path
 
 The path lives in `r.K["path"]` during the parse, as a `[]any` of `string`
 keys and `int` indices. Add a `val` rule action that reads it and tags each
@@ -121,11 +121,11 @@ func main() {
 
 Read the tags:
 
-- `<>` — the root map's path is empty.
-- `<1:a>` — the value `1` is reached by key `a`.
+- `<>`. The root map's path is empty.
+- `<1:a>`. The value `1` is reached by key `a`.
 
 
-## Step 4 — Go deeper
+## Step 4: Go deeper
 
 Nesting works the same way at any depth. With the same `val` annotator,
 parsing `{x:{a:1}}` yields:
@@ -153,11 +153,11 @@ yields `["<1:0>", "<2:1>", "<3:2>"]`: each element carries its index.
 - `Path` records the path of every value into `r.K["path"]` (a `[]any`).
 - The root path is empty (`[]any{}`, formatted here as `<>`).
 - Map keys add a `string` segment; array elements add an `int` index.
-- You read the path in your own rule action — the plugin never returns it.
+- You read the path in your own rule action; the plugin never returns it.
 
 Next:
 
-- [How-to guides](./guide.md) — focused recipes for common tasks.
-- [Reference](./reference.md) — the exact API surface.
-- [Concepts](./concepts.md) — how and why it works, including the
+- [How-to guides](./guide.md). Focused recipes for common tasks.
+- [Reference](./reference.md). The exact API surface.
+- [Concepts](./concepts.md). How and why it works, including the
   differences from the TypeScript version.

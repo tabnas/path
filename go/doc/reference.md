@@ -128,7 +128,7 @@ j.ParseMeta(src, map[string]any{
 })
 ```
 
-- `meta["path"]["base"]` (`[]any`) — the root path. The slice is
+- `meta["path"]["base"]` (`[]any`). The root path. The slice is
   shallow-copied, so the caller's slice is not mutated.
 
 If the entry is absent or not a `[]any`, the root path is `[]any{}`.
