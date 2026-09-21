@@ -153,9 +153,9 @@ conventional rule set:
 - **The hooks are `/prepend` references.** Function references are one
   instance-wide namespace in this engine, so a name the host grammar also
   registers is overwritten and only one of the two hooks runs. The bare
-  `@val-bo`, `@map-bo` and `@list-bo` are also the names of engine
-  builtins, and the jsonic port registers `@map-bo/append` and
-  `@list-bo/append`, so the plugin registers `@val-bo/prepend`,
+  `@val-bo`, `@map-bo` and `@list-bo` are also the names of hooks the
+  engine provides itself, and the jsonic port registers `@map-bo/append`
+  and `@list-bo/append`, so the plugin registers `@val-bo/prepend`,
   `@map-bo/prepend`, `@list-bo/prepend` and `@elem-ao/prepend`. The
   engine wires a `/prepend` reference without touching the phase's other
   hooks, so a host installed before or after Path keeps its own. The
