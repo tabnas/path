@@ -1,0 +1,32 @@
+[package]
+name = "tabnas-path"
+version = "0.3.6"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+description = "Property-path tracking plugin for the tabnas parsing engine"
+repository = "https://github.com/tabnas/path"
+
+[lib]
+name = "tabnas_path"
+path = "src/lib.rs"
+
+[dependencies]
+# The engine is consumed as a SIBLING CHECKOUT, the standard tabnas
+# development model: clone https://github.com/tabnas/parser next to this
+# repo. The `tabnas` crate is not published, so there is no registry
+# version to fall back on. It is this crate's only dependency, as
+# `@tabnas/parser` is the TypeScript package's and
+# `github.com/tabnas/parser/go` is the Go module's.
+tabnas = { path = "../../parser/rs" }
+
+[dev-dependencies]
+# The shared fixture runner (`../test/spec/*.tsv`), the Rust half of
+# `@tabnas/support`, which the TypeScript and Go suites run the same
+# rows through.
+tabnas-support = { path = "../../support/rs", features = ["serde_json"] }
+# The README's tiny example installs Path on the standard JSON grammar,
+# as the TypeScript README does with `@tabnas/json`; the suite runs that
+# example. The plugin itself ships no grammar and needs none.
+tabnas-json = { path = "../../json/rs" }
+serde_json = { version = "1.0", features = ["preserve_order"] }

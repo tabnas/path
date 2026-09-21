@@ -23,6 +23,7 @@ This repository contains:
 | ---------------- | ------------------------------------ |
 | [`ts/`](ts/)     | TypeScript / JavaScript implementation (canonical). |
 | [`go/`](go/)     | Go port (`tabnaspath`), tracking the TS version.    |
+| [`rs/`](rs/)     | Rust port (`tabnas-path` crate), tracking the TS version. |
 
 
 ## Tiny example
@@ -71,6 +72,11 @@ The docs follow the [Diátaxis](https://diataxis.fr) four-quadrant structure.
 - [How-to guides](go/doc/guide.md)
 - [Reference](go/doc/reference.md)
 - [Concepts](go/doc/concepts.md). Including differences from the TS version.
+
+**Rust** ([`rs/`](rs/)):
+
+- [`rs/README.md`](rs/README.md). Use, install, and the differences from
+  the TS version.
 
 
 ## License

@@ -21,8 +21,8 @@ without altering the existing rules. **Install the grammar first, then
 (`new Tabnas().use(Grammar).use(Path)` / `j.Use(Path, nil)` after the
 grammar).
 
-There are two implementations that must behave identically — TypeScript
-(canonical) and a Go port.
+There are three implementations that must behave identically — TypeScript
+(canonical), a Go port and a Rust port.
 
 ## Repository map
 
@@ -30,6 +30,11 @@ There are two implementations that must behave identically — TypeScript
 |---|---|
 | [`ts/`](ts/) | **Canonical** TypeScript implementation — the `@tabnas/path` package (version in `package.json`, mirrored by the exported `VERSION` in `src/path.ts`). Plugin in `src/path.ts`. Depends on `@tabnas/parser`. |
 | [`go/`](go/) | Go port — `github.com/tabnas/path/go` (`const VERSION` in `path.go`). Plugin in `path.go`. Depends on `github.com/tabnas/parser/go`. |
+| [`rs/`](rs/) | Rust port — the `tabnas-path` crate (`pub const VERSION` in `src/lib.rs`, `version` in `Cargo.toml`). Plugin in `src/lib.rs`. Depends on the `tabnas` crate via a `path` dependency (sibling checkout). Library only. See [`rs/AGENTS.md`](rs/AGENTS.md). |
+| [`rs/tests/common/fixture.rs`](rs/tests/common/fixture.rs) | The Rust twin of the grammar fixture and capture hook (`install_grammar` / `add_path_capture`). |
+| [`rs/tests/parity_test.rs`](rs/tests/parity_test.rs) | The Rust runner for the shared `test/spec/*.tsv` fixtures, through `tabnas_support::Runner`. |
+| [`rs/tests/path_test.rs`](rs/tests/path_test.rs) | Rust suite: the unit, stress and perf cases of the other two runtimes, plus what only this port can pin. |
+| [`ci/`](ci/) | Workflows and scripts **staged** for promotion into `.github/workflows/` by someone whose credentials can write there: `ci/workflows/rust.yml` (the Rust gate), `ci/workflows/docs.yml` (the prose gate), `ci/rust/run.sh` (what the Rust gate runs). |
 | [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
 | [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
 | [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
@@ -40,11 +45,11 @@ There are two implementations that must behave identically — TypeScript
 | [`go/parity_test.go`](go/parity_test.go) | `TestSpec` — the Go runner for the shared `test/spec/*.tsv` fixtures. |
 | [`go/stress_test.go`](go/stress_test.go) | No-panic / deep-nesting tests and `FuzzPathPlugin` — the plugin must never panic on malformed input. |
 | [`go/perf_test.go`](go/perf_test.go) | Go counterpart of `perf.test.ts`. |
-| [`ts/AGENTS.md`](ts/AGENTS.md), [`go/AGENTS.md`](go/AGENTS.md) | Per-language scoped notes. |
+| [`ts/AGENTS.md`](ts/AGENTS.md), [`go/AGENTS.md`](go/AGENTS.md), [`rs/AGENTS.md`](rs/AGENTS.md) | Per-language scoped notes. |
 
 There is **no CLI bin** here, and no grammar package: each runtime brings
 its own small grammar fixture in-process. The parity contract is the shared
-`test/spec/*.tsv` fixtures both runtimes run against that grammar (see
+`test/spec/*.tsv` fixtures all three runtimes run against that grammar (see
 [`test/AGENTS.md`](test/AGENTS.md)), plus the mirrored unit tests for what a
 fixture cannot express.
 
@@ -72,6 +77,15 @@ publish tagged releases):
   module's only tabnas dependency. Do **not** depend on the legacy
   `@tabnas/jsonic` / `github.com/tabnas/jsonic/go` shim, and do not add
   any other runtime dependency.
+- Rust: `tabnas = { path = "../../parser/rs" }` in `rs/Cargo.toml`. That
+  is the crate's only dependency. The engine crate is unpublished, so
+  `rs/Cargo.lock` records a resolution naming it and there is no registry
+  version to fall back on — which is why `ci/rust/run.sh` runs cargo
+  **without** `--locked` and checks the lockfile by diffing it instead,
+  exempting the siblings' own versions. The dev-dependencies
+  `tabnas-support` (`../../support/rs`, the shared fixture runner) and
+  `tabnas-json` (`../../json/rs`, the grammar the README example is
+  tested on) follow the same sibling model.
 
 Clone `https://github.com/tabnas/parser` as a sibling of this repo and
 build its TS (`cd parser/ts && npm install && npm run build`) before
@@ -80,24 +94,25 @@ and builds them first.
 
 ## Authority and alignment rules
 
-**TypeScript is canonical. Go is a port of it.** When behaviour must
-change:
+**TypeScript is canonical. Go and Rust are ports of it.** When behaviour
+must change:
 
 1. Change `ts/src/path.ts` first.
-2. Port the same change to `go/path.go`.
-3. Mirror the unit cases across `ts/test/path.test.ts` and
-   `go/path_test.go` — the two suites are the parity contract and should
-   cover the same ground. Both define a deliberately-minimal local grammar
-   (bare-key brace maps and bracket lists) that declares the hooked rules
-   and depends on nothing but the Tabnas parser. Keep `Grammar`
-   (`ts/test/fixture.ts`) and `installGrammar` (`go/path_test.go`) in
-   sync.
-4. Run both suites and confirm green.
+2. Port the same change to `go/path.go` and `rs/src/lib.rs`.
+3. Mirror the unit cases across `ts/test/path.test.ts`,
+   `go/path_test.go` and `rs/tests/path_test.rs` — the suites are the
+   parity contract and should cover the same ground. Each defines a
+   deliberately-minimal local grammar (bare-key brace maps and bracket
+   lists) that declares the hooked rules and depends on nothing but the
+   Tabnas parser. Keep `Grammar` (`ts/test/fixture.ts`), `installGrammar`
+   (`go/path_test.go`) and `install_grammar` (`rs/tests/common/fixture.rs`)
+   in sync.
+4. Run all three suites and confirm green.
 
-The Go port may differ in **mechanics** but not in **observable** path
-values for the same input (see the next section).
+The Go and Rust ports may differ in **mechanics** but not in
+**observable** path values for the same input (see the next section).
 
-## Path-array allocation: TS pools, Go allocates fresh
+## Path-array allocation: TS pools, Go and Rust allocate fresh
 
 This is the one genuinely non-obvious, intentional difference between the
 runtimes:
@@ -117,27 +132,37 @@ runtimes:
   `@pair-ao` / `@elem-ao` refs), so Go callers do **not** have to copy
   before retaining. There is no pool, so deep nesting is bounded only by
   memory (`stress_test.go` exercises depth 1000).
+- **Rust allocates a fresh `Value::Array` per level** too, so a path read
+  from the bag is an owned value. It differs from both in *where* the
+  child's entries are written: the engine cannot write the child's `k`
+  from the parent's `@pair-ao` / `@elem-ao`, so the child's own `@val-bo`
+  computes them from the parent's snapshot. Same values on the
+  conventional rule set; the limits of that are in
+  [`rs/AGENTS.md`](rs/AGENTS.md) and the crate README.
 
 Path **segments** are `any`: map keys are strings, array indices are
 numbers (deliberately `int` in Go, not `float64`, so a type switch
-round-trips cleanly). The observable path values — e.g. `["a","b"]` for
-`{a:{b:1}}`, `[0,1]` for `[x,y]` — must match across runtimes.
+round-trips cleanly; `Value::String` and `Value::Number` in Rust). The
+observable path values — e.g. `["a","b"]` for `{a:{b:1}}`, `[0,1]` for
+`[x,y]` — must match across runtimes.
 
 ## The plugin contract
 
 - It writes only `r.k.path` / `r.k.key` / `r.k.index` (TS) and the
-  equivalent `Rule.K` entries (Go) — plus, in TS only, the internal
-  `r.k.pathDepth` bookkeeping counter that indexes the pool (Go derives
-  the same number from `len(path)`). `pathDepth` is an implementation
-  detail, not part of the consumer contract. **Reading** the path is the job of a
-  separate rule action — the tests' `capture` / `addPathCapture` plugins
+  equivalent `Rule.K` (Go) and `rule.k` (Rust) entries — plus, in TS and
+  Rust, the internal `r.k.pathDepth` bookkeeping counter (in TS it
+  indexes the pool; Go derives the same number from `len(path)`).
+  `pathDepth` is an implementation detail, not part of the consumer
+  contract. **Reading** the path is the job of a separate rule action —
+  the tests' `capture` / `addPathCapture` / `add_path_capture` plugins
   show the pattern (annotate maps with `$`, render scalars as
   `<value:path>`).
 - The path only starts below the top-level implicit (`r.d > 0` guards),
   so the root value gets an empty path. A caller can seed a base path via
   parse meta: `parse(src, { path: { base: ['x','y'] } })` (TS) /
   `j.ParseMeta(src, map[string]any{"path": map[string]any{"base": []any{"x","y"}}})`
-  (Go). The `meta` / `TestMetaBasePath` tests cover this.
+  (Go) / `parser.parse_with_meta(src, meta)` (Rust). The `meta` /
+  `TestMetaBasePath` / `meta_base_path` tests cover this.
 - The plugin contributes only `bo`/`ao` state-action hooks, never
   alternates, so it never changes what the host grammar accepts.
 
@@ -162,18 +187,22 @@ dependencies.
 
 ## Build & test
 
-The repo-root [`Makefile`](Makefile) (adapted from voxgig/util) wraps both
-halves: `make build|test|clean` run the TS and Go sides,
+The repo-root [`Makefile`](Makefile) (adapted from voxgig/util) wraps all
+three: `make build|test|clean` run the TS, Go and Rust sides,
 `make publish-ts` publishes the TS package at its `package.json` version,
-and `make publish-go V=x.y.z` injects `V` into the `const VERSION` in
+`make publish-go V=x.y.z` injects `V` into the `const VERSION` in
 `go/path.go`, commits, and tags `go/vX.Y.Z` (`make tags-go` lists those
-tags; `make reset` does a clean rebuild + test of both). There is also a
-thin `ts/Makefile` with the same targets driven from `ts/`.
+tags), `make version-rs V=x.y.z` rewrites the two Rust version sites and
+the crate's `Cargo.lock` entry without committing (the crate is not
+published), and `make reset` does a clean rebuild + test of all three.
+There is also a thin `ts/Makefile` with the same targets driven from `ts/`.
 
-`VERSION` is exported by both runtimes (`go/path.go`, `ts/src/path.ts`) and
-must always equal `ts/package.json` `"version"`. `go/version_test.go` and
-`ts/test/version.test.ts` assert exactly that, so a release that bumps one
-side and forgets the other fails CI instead of shipping a stale constant.
+`VERSION` is exported by every runtime (`go/path.go`, `ts/src/path.ts`,
+`rs/src/lib.rs`, which must also match `version` in `rs/Cargo.toml`) and
+must always equal `ts/package.json` `"version"`. `go/version_test.go`,
+`ts/test/version.test.ts` and `rs/tests/version_test.rs` assert exactly
+that, so a release that bumps one side and forgets another fails CI
+instead of shipping a stale constant.
 
 TypeScript (from `ts/`):
 
@@ -191,13 +220,23 @@ go test ./...          # plugin tests + the local grammar fixture + stress/fuzz
 go vet ./...
 ```
 
+Rust (from `rs/`; the engine, `support` and `json` must be sibling
+checkouts at `../../parser`, `../../support` and `../../json`):
+
+```bash
+cargo build --all-targets
+cargo test --all-targets     # fixtures + the local grammar fixture + stress/perf
+cargo test --doc             # the README example, which --all-targets skips
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
 ## Verify your work
 
 The commands that prove a change is correct. Run them from the repo root
 unless stated:
 
 ```bash
-make build && make test      # both runtimes — the check that matters
+make build && make test      # all three runtimes — the check that matters
 ```
 
 Narrower, when iterating:
@@ -205,6 +244,8 @@ Narrower, when iterating:
 ```bash
 (cd ts && npm test)                       # `pretest` builds first, then runs dist-test/
 (cd go && go test ./... && go vet ./...)  # plugin + grammar fixture + stress/fuzz
+(cd rs && cargo test --all-targets)       # fixtures + grammar fixture + stress/perf
+ci/rust/run.sh                            # the full Rust gate, as CI would run it
 ```
 
 Each line is a subshell. `npm test` compiles first — its `pretest` runs
@@ -222,19 +263,22 @@ defect read as an accepted condition. The wiring is fixed instead, and
 
 What "correct" means here, in order of authority:
 
-1. **The shared fixtures pass in BOTH runtimes.** `test/spec/*.tsv` is the
-   parity contract, run by `ts/test/parity.test.ts` and
-   `go/parity_test.go` — a row green in one runtime and red in the other
-   is a failure, not a discrepancy.
+1. **The shared fixtures pass in EVERY runtime.** `test/spec/*.tsv` is the
+   parity contract, run by `ts/test/parity.test.ts`, `go/parity_test.go`
+   and `rs/tests/parity_test.rs` — a row green in one runtime and red in
+   another is a failure, not a discrepancy.
 2. **The observable path values match across runtimes.** The mechanics may
-   differ (TS pools and mutates, Go allocates fresh — see above), but the
-   same input must yield the same `path`/`key`/`index` values. Keep
-   `Grammar` (`ts/test/fixture.ts`) and `installGrammar`
-   (`go/path_test.go`) in sync, and mirror unit cases across
-   `ts/test/path.test.ts` and `go/path_test.go`.
-3. **The two version constants agree** — `ts/package.json` `"version"`,
-   `VERSION` in `ts/src/path.ts`, and `const VERSION` in `go/path.go`.
-   `ts/test/version.test.ts` and `go/version_test.go` assert exactly that.
+   differ (TS pools and mutates, Go and Rust allocate fresh — see above),
+   but the same input must yield the same `path`/`key`/`index` values.
+   Keep `Grammar` (`ts/test/fixture.ts`), `installGrammar`
+   (`go/path_test.go`) and `install_grammar` (`rs/tests/common/fixture.rs`)
+   in sync, and mirror unit cases across `ts/test/path.test.ts`,
+   `go/path_test.go` and `rs/tests/path_test.rs`.
+3. **The version constants agree** — `ts/package.json` `"version"`,
+   `VERSION` in `ts/src/path.ts`, `const VERSION` in `go/path.go`,
+   `VERSION` in `rs/src/lib.rs` and `version` in `rs/Cargo.toml`.
+   `ts/test/version.test.ts`, `go/version_test.go` and
+   `rs/tests/version_test.rs` assert exactly that.
 
 ## Releasing
 
@@ -259,9 +303,12 @@ accepts the publish. Pushing a tag by hand is the orchestrator's path
 
 The steps, in order:
 
-1. Bump all **three** version sites together — `ts/package.json`, `VERSION`
-   in `ts/src/path.ts` and `const VERSION` in `go/path.go`. Drift is caught
-   by `ts/test/version.test.ts` and `go/version_test.go`.
+1. Bump all **five** version sites together — `ts/package.json`, `VERSION`
+   in `ts/src/path.ts`, `const VERSION` in `go/path.go`, `VERSION` in
+   `rs/src/lib.rs` and `version` in `rs/Cargo.toml` (`make version-rs
+   V=x.y.z` does the last two and refreshes `rs/Cargo.lock`, which
+   `ci/rust/run.sh` checks). Drift is caught by `ts/test/version.test.ts`,
+   `go/version_test.go` and `rs/tests/version_test.rs`.
 2. Verify against the **published** dependencies rather than your checkout.
    The release runner installs fresh from the registry; a working tree
    usually does not, so reproduce that before believing anything:
@@ -459,8 +506,10 @@ error a parse raises comes from the engine or the host grammar and carries
 their codes. No shared fixture pins an error row of any kind (no
 `ERROR:<code>`, no rendered-message expectations, no bare `ERROR` cells);
 malformed-input behaviour is asserted in-language instead —
-`ts/test/stress.test.ts` requires a controlled `TabnasError`, and
-`go/stress_test.go` requires no panic (the error itself is not asserted).
+`ts/test/stress.test.ts` requires a controlled `TabnasError`,
+`go/stress_test.go` requires no panic (the error itself is not asserted),
+and `rs/tests/path_test.rs` (`no_crash_on_edge_inputs`) requires an error
+carrying a code.
 
 The machine-readable list is [`tabnas.plugin.json`](tabnas.plugin.json)
 (`errorCodes` — currently empty, matching the empty declared set). Keep the
@@ -508,6 +557,12 @@ line-ending config, the `go.work` wiring that mirrors
 `admin/scripts/link.sh`, and running both `npm test` in `path/ts` and
 `go test ./...` in `path/go`. Nothing here publishes to npm;
 `.github/workflows/release.yml` handles releases.
+
+**It takes no Rust input, so nothing tests `rs/` remotely yet.** The Rust
+gate is staged as `ci/workflows/rust.yml`, which runs `ci/rust/run.sh`
+(format, build, tests, doctests, clippy, lockfile check) after cloning the
+`parser`, `support` and `json` siblings; see [`ci/README.md`](ci/README.md)
+for what promoting it involves.
 
 ## Agent tooling
 
