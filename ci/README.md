@@ -21,3 +21,27 @@ This directory exists because session credentials cannot write
   suite already runs the other half of the gate
   (`ts/test/docs.test.js`), so promoting this adds the spelling and
   Google-convention arm rather than the whole gate.
+
+- **`workflows/rust.yml`** — the Rust gate: `rs/` built, tested
+  (fixtures, in-language cases and doctests), `rustfmt`-checked and
+  clippy-clean at `-D warnings`. The commands live in `ci/rust/run.sh`,
+  which the workflow calls and you can run too; `make test-rs` stays the
+  fast inner loop.
+
+  **Nothing tests `rs/` remotely today.** `ci.yml` calls the org-shared
+  polyglot workflow, which takes no Rust input, so the Rust port has
+  been proved only by hand since it landed. This workflow is standalone
+  and needs no change in `tabnas/.github` to run.
+
+  It clones three siblings itself — `tabnas/parser` (the engine, the
+  crate's only dependency), `tabnas/support` (the shared fixture runner)
+  and `tabnas/json` (the grammar the README example is tested on) —
+  because `rs/Cargo.toml` takes each as a path dependency and none is
+  published. That is also why it does **not** pass `--locked`: the lock
+  records each sibling by version, so once one of them bumps, `--locked`
+  would fail every pull request here, including ones touching no Rust.
+  See the comment in `ci/rust/run.sh`.
+
+  One thing to settle at promotion: `dtolnay/rust-toolchain` is
+  referenced by tag, not SHA, matching `tabnas/parser`'s own staged
+  `ci/workflows/rust.yml`. Every other action here is SHA-pinned.

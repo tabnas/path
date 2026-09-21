@@ -8,6 +8,11 @@
 # Vale enforce one spelling over the other, and it then reports the
 # other as a misspelling.
 
+[Dd]octest
+[Dd]octests
+[Jj]sonic
+[Ll]ockfile
+[Nn]amespace
 [Nn]pm
 [Pp]arser
 [Pp]reallocated
