@@ -1,6 +1,6 @@
 # libtabnaspath — the path parser as a C ABI
 
-<!-- tabnas-clib-template: v3 — stamped by admin tasks/adopt-clib.sh;
+<!-- tabnas-clib-template: v4 — stamped by admin tasks/adopt-clib.sh;
      edit the template and re-stamp, not this file. -->
 
 The path format parser as a C shared library, so languages with no
@@ -20,7 +20,7 @@ ZIG=/path/to/zig ./build.sh all
 
 | Function | Returns |
 |---|---|
-| `tabnas_version()` | `{"ok":true,"lib":"libtabnaspath","format":"path","template":"v3"}` |
+| `tabnas_version()` | `{"ok":true,"lib":"libtabnaspath","format":"path","template":"v4"}` |
 | `tabnas_grammar(opts, len)` | `{"ok":true,"handle":N}` — opts reserved, pass `(NULL, 0)`, unless the format notes below define them |
 | `tabnas_parse(handle, src, len)` | `{"ok":true,"accept":true[,"value":…]}` or `{"ok":true,"accept":false,"error":{…}}` |
 | `tabnas_grammar_free(handle)` | — |
@@ -66,7 +66,7 @@ const c = @cImport(@cInclude("tabnas.h"));
 
 ## Format notes
 
-Path does not change which inputs are accepted. It records the key/index path from the root to each value, so strict JSON decides acceptance (`jsonic.MakeJSON`, the JSON-plus-Path pairing path's README documents). The reply's `value` is not the document. It is the document's leaves in source order, `[{"path":[...],"value":v}]`, one per scalar or empty container (map keys as strings, list indices as integers), and the document can be rebuilt from them. Lenient jsonic is deliberately not the host: Path gets the path wrong for a top-level implicit list (`x,y,z` puts `x` at `[]` and `y` at `[0]`) in both TS and Go, and this ABI must not return wrong paths. The meta `path.base` seed cannot be reached while options are reserved. A value that reaches the capture with no tracked path is a plugin fault and returns `ok:false` (`internal`). Handle creation runs a test parse, so a build without Path fails `tabnas_grammar`.
+The library runs on the engine, not on another grammar: `tabnas_grammar`'s argument is DEFINED, as in libtabnasparser, and is a serialized GrammarSpec (the JSON `Tabnas.grammarSpec()` / `GrammarSpecFromJSON` exchange), which is installed first; Path is then installed on it. Path does not change which inputs are accepted; the spec decides that. It records the key/index path from the root to each value, and it tracks the rules a JSON-shaped spec names (`val`, `map`, `list`, `pair`, `elem`), as its own tests do. The reply's `value` is not the document. It is the document's leaves in source order, `[{"path":[...],"value":v}]`, one per scalar or empty container (map keys as strings, list indices as integers), and the document can be rebuilt from them. A value that reaches the capture with no tracked path is a plugin fault and returns `ok:false` (`internal`). That is what every parse returns under a spec whose values do not pass through the rules Path tracks, for example one whose start rule wraps `val`: such a spec is accepted by `tabnas_grammar`, because no input is known in advance to test it with. A spec with no `val` rule rejects input with `unexpected`, where libtabnasparser reports `unknown_rule`. The meta `path.base` seed has no slot in the ABI.
 
 ## Layout
 

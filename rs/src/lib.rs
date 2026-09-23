@@ -98,7 +98,7 @@ use tabnas::{
 /// release orchestrator rewrites both, and `tests/version_test.rs` fails
 /// the build if they drift. Mirrors `VERSION` in `ts/src/path.ts` and
 /// `const VERSION` in `go/path.go`.
-pub const VERSION: &str = "0.3.7";
+pub const VERSION: &str = "0.3.8";
 
 /// The README's Rust examples run as doctests, so a stale one fails the
 /// gate rather than misleading the reader. Its `toml` and `bash` fences
