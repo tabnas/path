@@ -5,6 +5,17 @@
   "description": "Value-path resolution for the tabnas engine.",
   "engine": "@tabnas/parser",
   "specDir": "test/spec",
+  "clib": {
+    "dir": "go/clib",
+    "library": "libtabnaspath",
+    "abi": "v1",
+    "errorCodes": [
+      "usage",
+      "grammar",
+      "handle",
+      "internal"
+    ]
+  },
   "errorCodes": [],
   "docs": "https://tabnas.dev/docs/packages",
   "repository": "https://github.com/tabnas/path",
