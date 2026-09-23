@@ -12,5 +12,8 @@ jobs:
   ci:
     uses: tabnas/.github/.github/workflows/polyglot-ci.yml@main
     with:
-      deps: "parser support json"
-      build-order: "parser support json path"
+      # debug is cloned because go/clib imports jsonic, which needs debug/go,
+      # and json/go/debugtest (in the go workspace) replaces debug/go with the
+      # sibling checkout: without the clone the workspace names a missing dir.
+      deps: "parser support debug json"
+      build-order: "parser support debug json path"
