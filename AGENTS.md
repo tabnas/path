@@ -618,7 +618,7 @@ workflow, edit `.github/workflows/` in a reviewed pull request: session
 credentials push workflow files (admin `DECISIONS.md` ADR-8, as amended
 2026-09-24), so nothing needs staging in `ci/` first. Two cases also
 involve admin, as [`ci/README.md`](ci/README.md) spells out. A workflow
-admin keeps a template for (`rollout/workflows/path__<file>.yml`,
+admin keeps a template for (`rollout/workflows/path__<file>`,
 `ci.yml` among them) is mirrored in that template at the same time, or a
 maintainer's next `rollout/apply-workflows.sh --apply` would push the old
 text back. The stamped `clib.yml` and `clib-release.yml` are never edited
