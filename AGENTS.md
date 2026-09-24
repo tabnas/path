@@ -95,7 +95,7 @@ There are three implementations that must behave identically — TypeScript
 | [`rs/tests/common/fixture.rs`](rs/tests/common/fixture.rs) | The Rust twin of the grammar fixture and capture hook (`install_grammar` / `add_path_capture`). |
 | [`rs/tests/parity_test.rs`](rs/tests/parity_test.rs) | The Rust runner for the shared `test/spec/*.tsv` fixtures, through `tabnas_support::Runner`. |
 | [`rs/tests/path_test.rs`](rs/tests/path_test.rs) | Rust suite: the unit, stress and perf cases of the other two runtimes, plus what only this port can pin. |
-| [`ci/`](ci/) | `ci/rust/run.sh`, what the Rust gate (`.github/workflows/rust.yml`) runs, and the staging area for workflow changes (see [`ci/README.md`](ci/README.md)). The prose gate runs from `.github/workflows/docs.yml`. |
+| [`ci/`](ci/) | `ci/rust/run.sh`, what the Rust gate (`.github/workflows/rust.yml`) runs. Workflow changes are made in `.github/workflows/` in a reviewed pull request; [`ci/README.md`](ci/README.md) names the two cases that also involve admin (a workflow admin keeps a template for, and the stamped `clib.yml` and `clib-release.yml`). The prose gate runs from `.github/workflows/docs.yml`. |
 | [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
 | [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
 | [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
@@ -613,11 +613,20 @@ operating on paths must treat both as hostile text.
 
 CI is `.github/workflows/ci.yml`, a thin **caller** of the org-standard
 reusable workflow `tabnas/.github/.github/workflows/polyglot-ci.yml@main`.
-It replaced the old per-repo `build.yml`; session credentials cannot write
-`.github/workflows/*` (see admin `DECISIONS.md` ADR-8), so it is promoted
-by a maintainer via `tabnas/admin rollout/apply-ci-folders.sh`. The caller
-passes only two inputs — the sibling closure to check out and the build
-order:
+It replaced the old per-repo `build.yml`. To change it, or any other
+workflow, edit `.github/workflows/` in a reviewed pull request: session
+credentials push workflow files (admin `DECISIONS.md` ADR-8, as amended
+2026-09-24), so nothing needs staging in `ci/` first. Two cases also
+involve admin, as [`ci/README.md`](ci/README.md) spells out. A workflow
+admin keeps a template for (`rollout/workflows/path__<file>`,
+`ci.yml` among them) is mirrored in that template at the same time, or a
+maintainer's next `rollout/apply-workflows.sh --apply` would push the old
+text back. The stamped `clib.yml` and `clib-release.yml` are never edited
+by hand: they change in admin `tasks/clib-template/` and reach this repo
+by a re-stamp with `tasks/adopt-clib.sh`. Sessions still cannot push
+tags, so a maintainer pushes any tag a tag-triggered workflow needs. The
+caller passes only two inputs — the sibling closure to check out and the
+build order:
 
 ```yaml
 deps:        "parser debug json abnf railroad"
