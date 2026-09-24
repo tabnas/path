@@ -9,39 +9,27 @@ This directory exists because session credentials cannot write
 2. A maintainer promotes it with the admin `rollout/apply-ci-folders.sh`
    script.
 
-## Pending
+## Promoted, 2026-09-22
 
-- **`workflows/docs.yml`** — the prose gate: Vale over the reader-facing
-  pages at the levels set in `.vale.ini`, on the file list
-  `ts/scripts/gated-docs.cjs` produces. See `docs/STYLE-GUIDE.md`.
+Both files that were staged here are now live, moved by the rollout
+script rather than edited: `workflows/docs.yml` is
+`.github/workflows/docs.yml` and `workflows/rust.yml` is
+`.github/workflows/rust.yml`. Nothing is pending. Read the workflows
+themselves rather than a description of them here.
 
-  It needs no sibling checkouts and no secrets, and pins its own Vale
-  version. Errors fail the job; warnings go to the run summary as a
-  report. `make prose` runs the identical check locally, and the test
-  suite already runs the other half of the gate
-  (`ts/test/docs.test.js`), so promoting this adds the spelling and
-  Google-convention arm rather than the whole gate.
+## What still lives here
 
-- **`workflows/rust.yml`** — the Rust gate: `rs/` built, tested
-  (fixtures, in-language cases and doctests), `rustfmt`-checked and
-  clippy-clean at `-D warnings`. The commands live in `ci/rust/run.sh`,
-  which the workflow calls and you can run too; `make test-rs` stays the
-  fast inner loop.
+- **`rust/run.sh`** is the Rust gate itself: `rs/` built, tested
+  (fixtures, in-language cases and doctests), `rustfmt`-checked, and
+  clippy-clean at `-D warnings`, with a lockfile check.
+  `.github/workflows/rust.yml` calls it and you can run it too;
+  `make test-rs` stays the fast inner loop.
 
-  **Nothing tests `rs/` remotely today.** `ci.yml` calls the org-shared
-  polyglot workflow, which takes no Rust input, so the Rust port has
-  been proved only by hand since it landed. This workflow is standalone
-  and needs no change in `tabnas/.github` to run.
-
-  It clones three siblings itself — `tabnas/parser` (the engine, the
-  crate's only dependency), `tabnas/support` (the shared fixture runner)
-  and `tabnas/json` (the grammar the README example is tested on) —
-  because `rs/Cargo.toml` takes each as a path dependency and none is
-  published. That is also why it does **not** pass `--locked`: the lock
+  The workflow clones three siblings itself: `tabnas/parser` (the
+  engine, the crate's only dependency), `tabnas/support` (the shared
+  fixture runner), and `tabnas/json` (the grammar the README example is
+  tested on), because `rs/Cargo.toml` takes each as a path dependency.
+  That is also why the gate does **not** pass `--locked`: the lock
   records each sibling by version, so once one of them bumps, `--locked`
   would fail every pull request here, including ones touching no Rust.
   See the comment in `ci/rust/run.sh`.
-
-  One thing to settle at promotion: `dtolnay/rust-toolchain` is
-  referenced by tag, not SHA, matching `tabnas/parser`'s own staged
-  `ci/workflows/rust.yml`. Every other action here is SHA-pinned.

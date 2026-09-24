@@ -21,8 +21,8 @@ only runtime dependency, as `@tabnas/parser` is for TS and
 `github.com/tabnas/parser/go` is for Go. `tabnas-support` (the fixture
 runner) and `tabnas-json` (the grammar the README example is tested on)
 are dev-dependencies, also by sibling path. None of the three is
-published, so `ci/rust/run.sh` and `ci/workflows/rust.yml` clone all
-three.
+published, so `ci/rust/run.sh` expects all three beside the checkout
+and `.github/workflows/rust.yml` clones them.
 
 ```bash
 cargo build --all-targets
@@ -216,18 +216,16 @@ checks before running cargo.
 `README.md` follows [`../docs/STYLE-GUIDE.md`](../docs/STYLE-GUIDE.md):
 no em dashes in prose, no first person, no links from it to any
 `AGENTS.md`, no project history, none of the phrases in
-`.vale/styles/config/vocabularies/Tabnas/reject.txt`. It is NOT yet in
-the gated list `ts/scripts/gated-docs.cjs` produces (that file is under
-`ts/`, which the port did not touch); adding `"rs/README.md"` there, as
-the json repo did, puts both halves of the prose gate on it, and any Rust
-term Vale's dictionary lacks then goes in `accept.txt`, one word per
-line.
+`.vale/styles/config/vocabularies/Tabnas/reject.txt`. It is in the
+gated list `ts/scripts/gated-docs.cjs` produces, so both halves of the
+prose gate run on it, and a Rust term Vale's dictionary lacks goes in
+`accept.txt` as the style guide describes.
 
 ## Running it
 
 `make test-rs` is the fast loop (`cargo test --all-targets`, then
 `cargo test --doc`, then clippy). `ci/rust/run.sh` is the full gate and is
-what CI would run once `ci/workflows/rust.yml` is promoted: it adds
+what CI runs, from `.github/workflows/rust.yml`: it adds
 `cargo fmt --check`, a build, the lockfile check (exempting the three
 sibling crates' recorded versions, and restoring the committed lock after
 a green run as well as a red one) and the MSRV pin.
