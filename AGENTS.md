@@ -95,7 +95,7 @@ There are three implementations that must behave identically — TypeScript
 | [`rs/tests/common/fixture.rs`](rs/tests/common/fixture.rs) | The Rust twin of the grammar fixture and capture hook (`install_grammar` / `add_path_capture`). |
 | [`rs/tests/parity_test.rs`](rs/tests/parity_test.rs) | The Rust runner for the shared `test/spec/*.tsv` fixtures, through `tabnas_support::Runner`. |
 | [`rs/tests/path_test.rs`](rs/tests/path_test.rs) | Rust suite: the unit, stress and perf cases of the other two runtimes, plus what only this port can pin. |
-| [`ci/`](ci/) | Workflows and scripts **staged** for promotion into `.github/workflows/` by someone whose credentials can write there: `ci/workflows/rust.yml` (the Rust gate), `ci/workflows/docs.yml` (the prose gate), `ci/rust/run.sh` (what the Rust gate runs). |
+| [`ci/`](ci/) | `ci/rust/run.sh`, what the Rust gate (`.github/workflows/rust.yml`) runs, and the staging area for workflow changes (see [`ci/README.md`](ci/README.md)). The prose gate runs from `.github/workflows/docs.yml`. |
 | [`ts/test/fixture.ts`](ts/test/fixture.ts) | The local grammar fixture (`Grammar`) and the `capture` plugin that annotates nodes with their path — shared by the TS unit and parity suites. |
 | [`ts/test/path.test.ts`](ts/test/path.test.ts) | TS unit suite, built on that fixture. |
 | [`ts/test/parity.test.ts`](ts/test/parity.test.ts) | Runs the shared `test/spec/*.tsv` fixtures (see [`test/AGENTS.md`](test/AGENTS.md)). |
@@ -630,11 +630,10 @@ line-ending config, the `go.work` wiring that mirrors
 `go test ./...` in `path/go`. Nothing here publishes to npm;
 `.github/workflows/release.yml` handles releases.
 
-**It takes no Rust input, so nothing tests `rs/` remotely yet.** The Rust
-gate is staged as `ci/workflows/rust.yml`, which runs `ci/rust/run.sh`
-(format, build, tests, doctests, clippy, lockfile check) after cloning the
-`parser`, `support` and `json` siblings; see [`ci/README.md`](ci/README.md)
-for what promoting it involves.
+**It takes no Rust input, so `rs/` has a gate of its own.**
+`.github/workflows/rust.yml` clones the `parser`, `support` and `json`
+siblings and runs `ci/rust/run.sh` (format, build, tests, doctests,
+clippy, lockfile check) on the MSRV.
 
 ## Agent tooling
 
