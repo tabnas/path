@@ -24,8 +24,8 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	plug "github.com/tabnas/path/go"
 	host "github.com/tabnas/parser/go"
+	plug "github.com/tabnas/path/go"
 )
 
 const (
@@ -86,7 +86,66 @@ var _ = &sharedMu // referenced only by opt-in constructs
 // ignore it; a row that defines options must validate it here, since
 // nothing upstream does.
 func newParser(opts string) (parseFn, error) {
-	off := false; tn := host.Make(host.Options{Color: &host.ColorOptions{Active: &off}}); gs, err := host.GrammarSpecFromJSON([]byte(opts)); if err != nil { return nil, &host.TabnasError{Code: "grammar", Detail: "unreadable spec: " + err.Error()} }; if err := tn.Grammar(gs); err != nil { return nil, err }; start := tn.Config().RuleStart; if start == "" { start = "val" }; if tn.RSM()[start] == nil { return nil, &host.TabnasError{Code: "grammar", Detail: "spec installs no start rule " + start + ", so no input could be validated against it"} }; if err := tn.Use(plug.Path, nil); err != nil { return nil, err }; var leaves []any; lost := false; tn.Rule("val", func(rs *host.RuleSpec, _ *host.Parser) { rs.AddAC(func(r *host.Rule, _ *host.Context) { p, ok := r.K["path"].([]any); if !ok { lost = true; return }; v := r.Node; switch n := v.(type) { case *host.OrderedMap: if len(n.Keys) > 0 { return }; case map[string]any: if len(n) > 0 { return }; case []any: if len(n) > 0 { return } }; if host.IsUndefined(v) { v = nil }; leaves = append(leaves, map[string]any{"path": append([]any{}, p...), "value": v}) }) }); parse := func(src string) (any, error) { leaves, lost = []any{}, false; if _, err := tn.Parse(src); err != nil { return nil, err }; if lost { panic("path: a value was parsed with no tracked path") }; return leaves, nil }; return parse, nil
+	off := false
+	tn := host.Make(host.Options{Color: &host.ColorOptions{Active: &off}})
+	gs, err := host.GrammarSpecFromJSON([]byte(opts))
+	if err != nil {
+		return nil, &host.TabnasError{Code: "grammar", Detail: "unreadable spec: " + err.Error()}
+	}
+	if err := tn.Grammar(gs); err != nil {
+		return nil, err
+	}
+	start := tn.Config().RuleStart
+	if start == "" {
+		start = "val"
+	}
+	if tn.RSM()[start] == nil {
+		return nil, &host.TabnasError{Code: "grammar", Detail: "spec installs no start rule " + start + ", so no input could be validated against it"}
+	}
+	if err := tn.Use(plug.Path, nil); err != nil {
+		return nil, err
+	}
+	var leaves []any
+	lost := false
+	tn.Rule("val", func(rs *host.RuleSpec, _ *host.Parser) {
+		rs.AddAC(func(r *host.Rule, _ *host.Context) {
+			p, ok := r.K["path"].([]any)
+			if !ok {
+				lost = true
+				return
+			}
+			v := r.Node
+			switch n := v.(type) {
+			case *host.OrderedMap:
+				if len(n.Keys) > 0 {
+					return
+				}
+			case map[string]any:
+				if len(n) > 0 {
+					return
+				}
+			case []any:
+				if len(n) > 0 {
+					return
+				}
+			}
+			if host.IsUndefined(v) {
+				v = nil
+			}
+			leaves = append(leaves, map[string]any{"path": append([]any{}, p...), "value": v})
+		})
+	})
+	parse := func(src string) (any, error) {
+		leaves, lost = []any{}, false
+		if _, err := tn.Parse(src); err != nil {
+			return nil, err
+		}
+		if lost {
+			panic("path: a value was parsed with no tracked path")
+		}
+		return leaves, nil
+	}
+	return parse, nil
 }
 
 // reply marshals a result document. Marshalling cannot fail for the
