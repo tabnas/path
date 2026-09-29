@@ -138,7 +138,7 @@ publish tagged releases):
   module's only tabnas dependency. Do **not** depend on the legacy
   `@tabnas/jsonic` / `github.com/tabnas/jsonic/go` shim, and do not add
   any other runtime dependency.
-- Rust: `tabnas = { path = "../../parser/rs" }` in `rs/Cargo.toml`. That
+- Rust: `tabnas = { package = "tabnas-parser", path = "../../parser/rs" }` in `rs/Cargo.toml`. That
   is the crate's only dependency. The engine crate is unpublished, so
   `rs/Cargo.lock` records a resolution naming it and there is no registry
   version to fall back on — which is why `ci/rust/run.sh` runs cargo

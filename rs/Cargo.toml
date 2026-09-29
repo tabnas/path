@@ -18,7 +18,7 @@ path = "src/lib.rs"
 # version to fall back on. It is this crate's only dependency, as
 # `@tabnas/parser` is the TypeScript package's and
 # `github.com/tabnas/parser/go` is the Go module's.
-tabnas = { path = "../../parser/rs" }
+tabnas = { package = "tabnas-parser", path = "../../parser/rs" }
 
 [dev-dependencies]
 # The shared fixture runner (`../test/spec/*.tsv`), the Rust half of

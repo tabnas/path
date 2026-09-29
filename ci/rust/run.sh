@@ -4,7 +4,7 @@
 # can you. `make test-rs` is the fast inner loop; this is the full gate.
 #
 # The engine is a PATH DEPENDENCY on the sibling checkout
-# (rs/Cargo.toml: `tabnas = { path = "../../parser/rs" }`), and so are
+# (rs/Cargo.toml: `tabnas = { package = "tabnas-parser", path = "../../parser/rs" }`), and so are
 # the two dev-dependencies: tabnas-support (the shared fixture runner)
 # and tabnas-json (the grammar the README example and one test layer
 # Path on). None of the three crates is published, so there is no
@@ -83,7 +83,7 @@ fi
 lock_without_sibling_versions() {
   awk '
     /^\[\[package\]\]$/                                   { sib = 0 }
-    /^name = "(tabnas|tabnas-support|tabnas-json)"$/      { sib = 1 }
+    /^name = "(tabnas-parser|tabnas-support|tabnas-json)"$/      { sib = 1 }
     sib && /^version = / { print "version = \"<sibling>\""; next }
                          { print }
   ' "$1"
