@@ -7,9 +7,9 @@ package tabnaspath
 //
 // The fixture loader, the escape codec, the ERROR:<code> contract and the
 // row loop all come from github.com/tabnas/support/go, whose TypeScript
-// half ts/test/parity.test.ts uses to run the SAME files — so the two
-// implementations cannot drift without one of them going red, and neither
-// can the two loaders.
+// and Rust halves ts/test/parity.test.ts and rs/tests/parity_test.rs use to
+// run the SAME files — so the three implementations cannot drift without
+// one of them going red, and neither can the loaders.
 //
 // What is left here is only what is specific to path: the grammar and the
 // capture plugin the fixtures parse against, and how to flatten a result
@@ -24,7 +24,7 @@ import (
 
 // TestSpec runs every fixture in the spec directory. FindSpecDir walks up
 // from the package directory, and Dir discovers the files by listing, so
-// adding a .tsv runs it in both runtimes without touching either runner.
+// adding a .tsv runs it in every runtime without touching any runner.
 func TestSpec(t *testing.T) {
 	dir, err := support.FindSpecDir("")
 	if err != nil {
@@ -44,9 +44,9 @@ func TestSpec(t *testing.T) {
 			}
 
 			// path has no grammar of its own: it annotates whatever grammar
-			// it is installed into. newParser supplies that grammar in both
-			// runtimes, and the capture plugin collects what the fixture
-			// asserts against.
+			// it is installed into. newParser supplies that grammar here, as
+			// its TypeScript and Rust twins do there, and the capture plugin
+			// collects what the fixture asserts against.
 			j := newParser()
 			addPathCapture(j)
 			return j.ParseMeta(input, opts)

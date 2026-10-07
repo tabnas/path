@@ -1,7 +1,7 @@
 # Agent guide: Go implementation
 
 Scoped notes for `go/`. See the [root AGENTS.md](../AGENTS.md) for the rules that
-apply across both implementations. This is a **port** of the canonical TypeScript
+apply across all three implementations. This is a **port** of the canonical TypeScript
 plugin — match its observable behaviour; do not invent new behaviour here.
 
 ## Commands

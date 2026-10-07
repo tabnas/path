@@ -52,8 +52,9 @@ jobs:
         with:
           path: path
 
-      # Sibling main, not a release: none of the three crates is
-      # published, so this is the only resolution there is. The engine
+      # Sibling main, not a release: rs/Cargo.toml names all three crates
+      # by path (each is on crates.io, but the committed manifest stays
+      # path-only), so this is the only resolution there is. The engine
       # is the runtime dependency; tabnas-support runs the shared
       # fixtures and tabnas-json is the grammar the README example is
       # tested against, both dev-only. It is also the closure ci.yml
