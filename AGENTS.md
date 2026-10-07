@@ -150,14 +150,18 @@ wiring there. Only Rust needs one:
   `github.com/tabnas/jsonic/go` shim, and do not add any other runtime
   dependency.
 - Rust: `tabnas = { package = "tabnas-parser", path = "../../parser/rs" }` in `rs/Cargo.toml`. That
-  is the crate's only dependency. The engine crate is unpublished, so
-  `rs/Cargo.lock` records a resolution naming it and there is no registry
-  version to fall back on — which is why `ci/rust/run.sh` runs cargo
-  **without** `--locked` and checks the lockfile by diffing it instead,
-  exempting the siblings' own versions. The dev-dependencies
-  `tabnas-support` (`../../support/rs`, the shared fixture runner) and
-  `tabnas-json` (`../../json/rs`, the grammar the README example is
-  tested on) follow the same sibling model.
+  is the crate's only dependency. The engine is on crates.io as
+  `tabnas-parser`, and so is this crate, as `tabnas-path`, but the
+  committed manifest stays path-only: `crates-release.yml` rewrites the
+  path into a crates.io requirement only in the copy it publishes. A path
+  dependency resolves to whatever version the sibling checkout holds, so
+  `rs/Cargo.lock`'s entries for the siblings move whenever their checkouts
+  do. That is why `ci/rust/run.sh` runs cargo **without** `--locked` and
+  checks the lockfile by diffing it instead, exempting the siblings' own
+  versions. The dev-dependencies `tabnas-support` (`../../support/rs`, the
+  shared fixture runner) and `tabnas-json` (`../../json/rs`, the grammar
+  the README example is tested on) follow the same sibling model, and the
+  published crate drops them.
 
 Only the Rust side needs sibling checkouts: clone `parser`, `support` and
 `json` from `https://github.com/tabnas/` beside this repo (see "Build &
@@ -249,8 +253,9 @@ dependencies.
   / Go `github.com/tabnas/debug/go` (`debug.Debug` trace plugin,
   `debug.Describe(j)`). Use it from a scratch module/script that installs
   your grammar and `Path` so `Describe` shows how `Path` is wired and a
-  traced parse shows the lex/rule steps. In Go, pull it in via a scratch
-  module with a `replace` at a local checkout.
+  traced parse shows the lex/rule steps. In Go, pull the published module
+  into a scratch module with `go get github.com/tabnas/debug/go@latest`,
+  or use a `replace` at a local checkout for unreleased changes.
 - **Bundled fallback, Go only** (zero extra dependency): the Go parser
   ships `tabnas.Debug` and `tabnas.Describe(j)` in the `tabnas` package
   (`parser/go/debug.go`) for a quick trace without another module. The TS
@@ -266,8 +271,11 @@ three: `make build|test|clean` run the TS, Go and Rust sides,
 `make publish-go V=x.y.z` injects `V` into the `const VERSION` in
 `go/path.go`, commits, and tags `go/vX.Y.Z` (`make tags-go` lists those
 tags), `make version-rs V=x.y.z` rewrites the two Rust version sites and
-the crate's `Cargo.lock` entry without committing (the crate is not
-published), and `make reset` does a clean rebuild + test of all three.
+the crate's `Cargo.lock` entry without committing (the crate itself is
+published by `release.yml`'s `crates` job, with the rest of a release),
+and `make reset` does a clean rebuild + test of all three. Neither publish
+target is the release path: see "Releasing" and
+"`make publish-ts` and `make publish-go` are not the release path".
 There is also a thin `ts/Makefile` with the same targets driven from `ts/`.
 
 `VERSION` is exported by every runtime (`go/path.go`, `ts/src/path.ts`,
@@ -319,7 +327,7 @@ make build && make test      # all three runtimes — the check that matters
 Narrower, when iterating:
 
 ```bash
-(cd ts && npm test)                       # `pretest` builds first, then runs dist-test/
+(cd ts && npm test)                       # `pretest` builds first, then runs dist-test/ and test/docs.test.js
 (cd go && go test ./... && go vet ./...)  # plugin + grammar fixture + stress/fuzz
 (cd rs && cargo test --all-targets)       # fixtures + grammar fixture + stress/perf
 ci/rust/run.sh                            # the full Rust gate, as CI would run it
@@ -386,6 +394,16 @@ The steps, in order:
    V=x.y.z` does the last two and refreshes `rs/Cargo.lock`, which
    `ci/rust/run.sh` checks). Drift is caught by `ts/test/version.test.ts`,
    `go/version_test.go` and `rs/tests/version_test.rs`.
+
+   The Rust crate ships with the release too. Once the Go tag is on the
+   remote, `release.yml`'s `crates` job hands it to `crates-release.yml`,
+   which publishes `rs/` from that tag to crates.io over OIDC trusted
+   publishing. It first rewrites the path dependency on the engine into a
+   requirement on `tabnas-parser`'s newest stable crates.io version, and
+   drops the path-only dev-dependencies, so `cargo publish` verify-builds
+   against what a consumer gets. It skips a version crates.io already has.
+   A failed crates publish blocks and unpublishes nothing: re-run that job
+   to repair it.
 2. Verify against the **published** dependencies rather than your checkout.
    The release runner installs fresh from the registry; a working tree
    usually does not, so reproduce that before believing anything:
@@ -407,11 +425,15 @@ The steps, in order:
    published one. Reinstalling is the part that matters.
 
    One thing a clean install does **not** isolate:
-   `ts/test/doc-examples.test.*` resolves `@tabnas/*` by filesystem path
-   (`const TABNAS = path.join(REPO, '..')`), not through `node_modules`. If
-   unbuilt sibling checkouts sit beside this repo, those blocks fail with
-   `MODULE_NOT_FOUND` no matter what you installed — build the siblings, or
-   verify somewhere they are absent.
+   `ts/test/doc-examples.test.*` resolves a doc example's `require`
+   through `node_modules` first, but a `@tabnas/*` package that is not
+   installed falls back to the sibling checkout `../<x>/ts`
+   (`const TABNAS = path.join(REPO, '..')`), and `@tabnas/path` itself to
+   this repository's `ts/`. The README's example requires `@tabnas/json`,
+   which `ts/package.json` does not declare, so it runs against a sibling
+   `json` checkout, not a published release, and fails with
+   `MODULE_NOT_FOUND` if that checkout is absent or unbuilt. CI's `deps`
+   includes `json`, so there the sibling is cloned and built.
 
    `npm test` already compiles here: `ts/package.json` sets `pretest` to
    `npm run build`, which npm runs automatically. No separate build step is

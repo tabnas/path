@@ -6,7 +6,7 @@ see the path (keys and indices) leading to the current value.
 
 
 [![npm version](https://img.shields.io/npm/v/@tabnas/path.svg)](https://npmjs.com/package/@tabnas/path)
-[![build](https://github.com/tabnas/path/actions/workflows/build.yml/badge.svg)](https://github.com/tabnas/path/actions/workflows/build.yml)
+[![build](https://github.com/tabnas/path/actions/workflows/ci.yml/badge.svg)](https://github.com/tabnas/path/actions/workflows/ci.yml)
 
 
 | ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |

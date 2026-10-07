@@ -109,15 +109,11 @@ The plugin is also available as a `tabnas::Plugin`, for
 
 ## Install
 
-The `tabnas` crate is not published to a registry, so the engine is
-consumed as a **sibling checkout**, the standard tabnas development
-model. Clone `https://github.com/tabnas/parser` next to this repository
-and point at it:
+The engine is not part of this crate. Both are on crates.io, the engine
+as `tabnas-parser`, whose library is named `tabnas` in code, so add both:
 
-```toml
-[dependencies]
-tabnas-path = { path = "../path/rs" }
-tabnas = { package = "tabnas-parser", path = "../parser/rs" }
+```bash
+cargo add tabnas-path tabnas-parser
 ```
 
 Both entries are needed. A crate's dependencies are not passed on to its
@@ -125,10 +121,13 @@ dependents, so `tabnas-path` alone does not put `tabnas` in your extern
 prelude, and the examples above that name `tabnas::Tabnas` would not
 resolve. Only `PathError` (the engine's `TabnasError`) is re-exported.
 
-The engine is the crate's only dependency. The test suite also uses two
-sibling checkouts, `https://github.com/tabnas/support` (the shared fixture
-runner) and `https://github.com/tabnas/json` (the grammar the example
-above runs on), as dev-dependencies.
+The engine is the crate's only dependency. In this repository,
+`Cargo.toml` takes it by path from a sibling checkout instead, and the
+test suite also uses two sibling checkouts, `https://github.com/tabnas/support`
+(the shared fixture runner) and `https://github.com/tabnas/json` (the
+grammar the example above runs on), as dev-dependencies. The release
+workflow swaps the engine's path for a crates.io version, and drops those
+two, when it publishes this crate.
 
 ## Differences from the canonical TypeScript
 
@@ -167,8 +166,9 @@ conventional rule set:
 
 ## Build and test
 
-The engine and the two test-only crates are path dependencies on sibling
-checkouts, so there is nothing to fetch:
+The engine and the two test-only crates are path dependencies here, so
+clone `parser`, `support` and `json` from `https://github.com/tabnas/`
+beside this repository first:
 
 ```bash
 cargo test --all-targets
