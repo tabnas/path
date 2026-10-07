@@ -20,9 +20,12 @@ Crate `tabnas-path`, library `tabnas_path`. The engine crate `tabnas` is a
 only runtime dependency, as `@tabnas/parser` is for TS and
 `github.com/tabnas/parser/go` is for Go. `tabnas-support` (the fixture
 runner) and `tabnas-json` (the grammar the README example is tested on)
-are dev-dependencies, also by sibling path. None of the three is
-published, so `ci/rust/run.sh` expects all three beside the checkout
-and `.github/workflows/rust.yml` clones them.
+are dev-dependencies, also by sibling path. All three are on crates.io,
+and so is this crate, but the committed manifest stays path-only, so
+`ci/rust/run.sh` expects all three beside the checkout and
+`.github/workflows/rust.yml` clones them. When `crates-release.yml`
+publishes the crate, it rewrites the engine's path into a crates.io
+requirement and drops the two path-only dev-dependencies.
 
 ```bash
 cargo build --all-targets

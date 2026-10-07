@@ -12,14 +12,18 @@ go test ./...
 go vet ./...
 ```
 
-To build and test against the Tabnas GitHub `main` branch:
+`go.mod` requires published modules, so the commands above resolve them from
+the module proxy. To build and test against an unreleased engine, use a
+`go.work` one level up, outside the repository: admin's `scripts/link.sh`
+writes one over the sibling checkouts. Do not
+`go get github.com/tabnas/parser/go@main`: that rewrites `go.mod` and
+`go.sum`, which is a dependency change (see the root AGENTS.md, "Never
+commit the local wiring").
 
-```sh
-go get github.com/tabnas/parser/go@main
-```
-
-The dependency is `github.com/tabnas/parser/go` (Go package name `tabnas`, main
-type `Tabnas`). It is the only required dependency. Do not depend on the legacy
+The runtime dependency is `github.com/tabnas/parser/go` (Go package name
+`tabnas`, main type `Tabnas`), and it is the only one. `go.mod` also requires
+`github.com/tabnas/support/go`, the shared fixture runner, which only
+`parity_test.go` imports. Do not depend on the legacy
 `github.com/tabnas/jsonic/go` shim module.
 
 ## Source notes
@@ -35,15 +39,18 @@ type `Tabnas`). It is the only required dependency. Do not depend on the legacy
   so it does not change what the host grammar parses — it only annotates `Rule.K`.
 - Path segments are `any`: map keys are `string`, array indices are `int`
   (deliberately `int`, not `float64`, so a type switch round-trips cleanly).
-- `const VERSION` is bumped by the release orchestrator (`admin/publish.sh`) and
-  by the `publish-go` Makefile target. `version_test.go` asserts it equals
-  `ts/package.json` `"version"`, so a bump that misses one side fails CI.
+- `const VERSION` moves with every release, in the version-bump pull request
+  that moves all five version sites together (root AGENTS.md, "Releasing").
+  The `publish-go` Makefile target also rewrites it, but it is not the release
+  path. `version_test.go` asserts it equals `ts/package.json` `"version"`, so
+  a bump that misses one side fails CI.
 
 ## Debugging
 
 Prefer the dedicated `github.com/tabnas/debug/go` package (dev-only — do not add
-it to this module's dependencies; use it from a scratch module with a `replace`
-pointing at a local checkout):
+it to this module's dependencies; use it from a scratch module, with
+`go get github.com/tabnas/debug/go@latest` or a `replace` pointing at a local
+checkout for unreleased changes):
 
 ```go
 import debug "github.com/tabnas/debug/go"
