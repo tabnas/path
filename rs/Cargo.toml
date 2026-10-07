@@ -14,7 +14,9 @@ path = "src/lib.rs"
 [dependencies]
 # The engine is consumed as a SIBLING CHECKOUT, the standard tabnas
 # development model: clone https://github.com/tabnas/parser next to this
-# repo. The `tabnas` crate is not published, so there is no registry
+# repo. The engine is on crates.io as tabnas-parser, but this committed
+# manifest stays path-only (crates-release.yml rewrites the path into a
+# crates.io requirement when it publishes), so there is no registry
 # version to fall back on. It is this crate's only dependency, as
 # `@tabnas/parser` is the TypeScript package's and
 # `github.com/tabnas/parser/go` is the Go module's.

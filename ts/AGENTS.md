@@ -1,7 +1,7 @@
 # Agent guide: TypeScript implementation
 
 Scoped notes for `ts/`. See the [root AGENTS.md](../AGENTS.md) for the rules that
-apply across both implementations. **This is the canonical implementation** —
+apply across all three implementations. **This is the canonical implementation** —
 behaviour changes start here.
 
 ## Commands

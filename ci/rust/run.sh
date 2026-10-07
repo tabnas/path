@@ -7,10 +7,10 @@
 # (rs/Cargo.toml: `tabnas = { package = "tabnas-parser", path = "../../parser/rs" }`), and so are
 # the two dev-dependencies: tabnas-support (the shared fixture runner)
 # and tabnas-json (the grammar the README example and one test layer
-# Path on). None of the three crates is published, so there is no
-# registry version to fall back on. Clone https://github.com/tabnas/parser,
-# https://github.com/tabnas/support and https://github.com/tabnas/json
-# next to this repo before running.
+# Path on). All three are on crates.io, but the committed manifest names
+# them by path alone, so there is no registry version to fall back on.
+# Clone https://github.com/tabnas/parser, https://github.com/tabnas/support
+# and https://github.com/tabnas/json next to this repo before running.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
