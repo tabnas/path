@@ -281,9 +281,13 @@ TypeScript (from `ts/`):
 
 ```bash
 npm install            # devDeps, @tabnas ones from the registry; auto-installs the @tabnas/parser peer
-npm run build          # tsc --build src test
-npm test               # node --test over dist-test/*.test.js
+npm test               # builds first, then node --test over dist-test/*.test.js and test/docs.test.js
 ```
+
+There is no separate build step: `pretest` runs `npm run build` before
+every `npm test` (see "Releasing"), so building first only builds twice.
+`npm run build` alone compiles without testing, as
+[`ts/AGENTS.md`](ts/AGENTS.md) also says.
 
 Go (from `go/`):
 
