@@ -7,22 +7,35 @@ behaviour changes start here.
 ## Commands
 
 ```sh
-npm install        # devDeps (typescript, @types/node); @tabnas/parser is a peer dep
-npm run build      # tsc build of src + test
-npm test           # node --test over dist-test
+npm install        # every devDependency, @tabnas/parser included, from the registry
+npm test           # builds first, then node --test over dist-test and test/docs.test.js
 ```
 
-`@tabnas/parser` is a **peer** dependency, not installed by `npm install`. To build and
-test against the GitHub `main` branch, fetch it, build it, and install it without
-saving:
+There is no separate build step: `pretest` runs `npm run build`
+(`tsc --build src && tsc --build test`) before every `npm test`, so
+building first only builds twice. Run `npm run build` alone to compile
+without testing.
 
-```sh
-curl -sSL -o work/tabnas.tgz \
-  https://github.com/tabnas/parser/archive/refs/heads/main.tar.gz
-tar -C work -xzf work/tabnas.tgz
-( cd work/parser-main/ts && npm install && npm run build )  # engine ships no dist/
-npm install --no-save work/parser-main/ts
-```
+`npm install` resolves everything from the npm registry. It installs the
+`"*"` devDependencies `@tabnas/debug`, `@tabnas/parser`,
+`@tabnas/railroad` and `@tabnas/support`, plus the pinned `typescript`
+and `@types/node`. `package-lock.json` is gitignored, so a fresh install
+takes the latest published `@tabnas/*` versions, and a local lockfile
+keeps whatever it first resolved. `@tabnas/parser` is also the **peer**
+dependency (`">=0"`), and npm 7 and later install peers too, so the
+engine is installed either way.
+
+To build and test against an unreleased engine, link a built checkout of
+it over `node_modules/@tabnas/parser` once the install has finished. In
+the fleet layout, build the sibling (`npm install && npm run build` in
+`../../parser/ts`), then run admin's `scripts/link.sh` (`make link` in
+the admin repo). For every repo in the tabnas folder, it replaces each
+`@tabnas/*` package in `node_modules` with a symlink to the matching
+sibling's `ts/`, without editing a tracked file. The tests also load
+`@tabnas/support`, so build that sibling too. A later `npm install` puts
+the registry copies back; re-run `link.sh` after one. The
+[root AGENTS.md](../AGENTS.md) covers this wiring under "The tabnas
+engine dependency".
 
 ## Source notes
 
