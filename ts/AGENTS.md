@@ -8,9 +8,13 @@ behaviour changes start here.
 
 ```sh
 npm install        # every devDependency, @tabnas/parser included, from the registry
-npm run build      # tsc build of src + test
-npm test           # node --test over dist-test
+npm test           # builds first, then node --test over dist-test and test/docs.test.js
 ```
+
+There is no separate build step: `pretest` runs `npm run build`
+(`tsc --build src && tsc --build test`) before every `npm test`, so
+building first only builds twice. Run `npm run build` alone to compile
+without testing.
 
 `npm install` resolves everything from the npm registry. It installs the
 `"*"` devDependencies `@tabnas/debug`, `@tabnas/parser`,
