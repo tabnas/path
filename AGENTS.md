@@ -135,13 +135,20 @@ wiring there. Only Rust needs one:
   this repo has no grammar diagram, so railroad is effectively unused here
   and debug is only for ad-hoc manual debugging (see below); neither is
   exercised by the test suite.
-- Go: `go/go.mod` requires `github.com/tabnas/parser/go` at a pinned
-  pseudo-version. There is **no `replace` directive checked in**; local
-  builds and CI resolve the sibling via a `go.work` workspace (the
-  module's package name is `tabnas`, main type `Tabnas`). That is the
-  module's only tabnas dependency. Do **not** depend on the legacy
-  `@tabnas/jsonic` / `github.com/tabnas/jsonic/go` shim, and do not add
-  any other runtime dependency.
+- Go: `go/go.mod` requires `github.com/tabnas/parser/go` (package
+  `tabnas`, main type `Tabnas`) and `github.com/tabnas/support/go`, each
+  at its latest published version (versions track the latest release, as
+  the top of this file says), so both resolve from the Go module proxy.
+  There is **no `replace` directive checked in**. CI builds and tests
+  through a workspace over its cloned siblings, and its `GOWORK=off`
+  step builds the module and compiles its tests against exactly the
+  required versions. A `go.work` one level up, outside the repo, is
+  optional local wiring and is never committed (see "Never commit the
+  local wiring"). `support/go` is the shared fixture runner, and only
+  `go/parity_test.go` imports it, so the engine is the package's only
+  tabnas dependency. Do **not** depend on the legacy `@tabnas/jsonic` /
+  `github.com/tabnas/jsonic/go` shim, and do not add any other runtime
+  dependency.
 - Rust: `tabnas = { package = "tabnas-parser", path = "../../parser/rs" }` in `rs/Cargo.toml`. That
   is the crate's only dependency. The engine crate is unpublished, so
   `rs/Cargo.lock` records a resolution naming it and there is no registry
@@ -636,13 +643,14 @@ caller passes only two inputs — the sibling closure to check out and the
 build order:
 
 ```yaml
-deps:        "parser debug json abnf railroad"
-build-order: "parser debug json path abnf railroad"
+deps:        "parser support json"
+build-order: "parser support json path"
 ```
 
 The reusable workflow owns the matrix (OS/Node/Go versions), the LF
 line-ending config, the `go.work` wiring that mirrors
-`admin/scripts/link.sh`, and running both `npm test` in `path/ts` and
+`admin/scripts/link.sh`, a `GOWORK=off` build of `path/go` against the
+versions `go.mod` requires, and running both `npm test` in `path/ts` and
 `go test ./...` in `path/go`. Nothing here publishes to npm;
 `.github/workflows/release.yml` handles releases.
 
