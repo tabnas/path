@@ -116,21 +116,25 @@ fixture cannot express.
 
 ## The tabnas engine dependency
 
-Both runtimes depend on the unpublished `@tabnas` siblings via a
-**sibling checkout** (the standard tabnas dev model until the packages
-publish tagged releases):
+TypeScript and Go resolve published `@tabnas` packages, from the npm
+registry and the Go module proxy, so a sibling checkout is optional local
+wiring there. Only Rust needs one:
 
 - TypeScript: `@tabnas/parser` is a `peerDependency` (`">=0"`) in
   `ts/package.json` and mirrored as a `"*"` devDependency for local builds
   (npm >=7 / Node >=24 auto-installs peers; `engines.node` is `">=24"`).
-  Locally those `@tabnas/*` devDependencies resolve through
-  `ts/node_modules/@tabnas/*` **symlinks** into the sibling checkouts,
-  wired by `admin/scripts/link.sh` — do not `npm ci` or delete
-  `node_modules`, which would break them. `@tabnas/parser` is the plugin's
-  **only production dependency**. `@tabnas/debug` and `@tabnas/railroad`
-  are **dev-only** — but note this repo has no grammar diagram, so
-  railroad is effectively unused here and debug is only for ad-hoc manual
-  debugging (see below); neither is exercised by the test suite.
+  None of the `@tabnas/*` devDependencies is a `file:` path: each
+  resolves to whatever `ts/node_modules/@tabnas/` holds, a **symlink**
+  into the sibling checkout where `admin/scripts/link.sh` wired one, the
+  registry copy otherwise. Deleting `node_modules` drops those symlinks,
+  and the next install puts registry copies in their place; re-run
+  `link.sh` to wire the checkouts again. `@tabnas/parser` is the plugin's
+  **only production dependency**. `@tabnas/support` is a dev-only `"*"`
+  devDependency, the shared fixture runner `parity.test.ts` uses.
+  `@tabnas/debug` and `@tabnas/railroad` are **dev-only** too — but note
+  this repo has no grammar diagram, so railroad is effectively unused here
+  and debug is only for ad-hoc manual debugging (see below); neither is
+  exercised by the test suite.
 - Go: `go/go.mod` requires `github.com/tabnas/parser/go` at a pinned
   pseudo-version. There is **no `replace` directive checked in**; local
   builds and CI resolve the sibling via a `go.work` workspace (the
@@ -148,10 +152,11 @@ publish tagged releases):
   `tabnas-json` (`../../json/rs`, the grammar the README example is
   tested on) follow the same sibling model.
 
-Clone `https://github.com/tabnas/parser` as a sibling of this repo and
-build its TS (`cd parser/ts && npm install && npm run build`) before
-working here. CI (`.github/workflows/build.yml`) checks the siblings out
-and builds them first.
+Only the Rust side needs sibling checkouts: clone `parser`, `support` and
+`json` from `https://github.com/tabnas/` beside this repo (see "Build &
+test"). CI (`.github/workflows/ci.yml`, through the shared
+`polyglot-ci.yml`) clones the siblings it builds against and links them
+over the registry copies.
 
 ## Authority and alignment rules
 
@@ -268,7 +273,7 @@ instead of shipping a stale constant.
 TypeScript (from `ts/`):
 
 ```bash
-npm install            # devDeps; auto-installs the @tabnas/parser peer, resolves file: siblings
+npm install            # devDeps, @tabnas ones from the registry; auto-installs the @tabnas/parser peer
 npm run build          # tsc --build src test
 npm test               # node --test over dist-test/*.test.js
 ```
